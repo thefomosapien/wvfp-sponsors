@@ -13,11 +13,10 @@
 window.WVFP = {
 
   settings: {
-    // Where inquiries are sent. Leave formEndpoint empty to fall back
-    // to opening the visitor's email app addressed to contactEmail.
-    // See integrations/google-apps-script.gs for the recommended setup
-    // (logs each inquiry to the prospect tracker sheet + emails the owner).
-    formEndpoint: "",
+    // The deployed Google Apps Script web app (Deploy → Manage deployments →
+    // Web app URL). Must look like https://script.google.com/macros/s/…/exec
+    // The form submits only here — it never opens the visitor's email app.
+    formEndpoint: "https://script.google.com/macros/s/AKfycbyBW4NVFmXvJiJSJY083xm6nD141_xQDwxt4FVbqv5NDa3A3Qu0fLM5F1gjD_GgnvQE/exec",
     contactEmail: "sponsors@wvfastpitch.org", // TODO: confirm the public sponsorship email
 
     // The season/year currently being sold. Never shown on the page —

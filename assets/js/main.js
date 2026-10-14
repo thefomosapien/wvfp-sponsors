@@ -390,18 +390,21 @@
       "&body=" + encodeURIComponent(lines.join("\n"));
   }
 
-  function finish(d, viaEmailApp) {
+  // Only ever called after the server confirms {"ok": true}
+  function finish(d) {
     form.hidden = true;
     formDone.hidden = false;
-    var text = $("#formDoneText");
-    if (viaEmailApp) {
-      text.innerHTML = "We've opened your email app with your inquiry ready to send — just hit send. " +
-        "If it didn't open, email us at <a href=\"" + mailtoFor(d) + "\">" + (SETTINGS.contactEmail || "") + "</a>.";
-    } else {
-      text.textContent = "Thanks, " + d.name.split(" ")[0] + "! Your inquiry about " +
-        d.opportunity_label.replace(/ — .*$/, "") + " is on its way to the WVFP sponsorship team.";
-    }
+    $("#formDoneText").textContent = "Thanks, " + d.name.split(" ")[0] + "! Your inquiry about " +
+      d.opportunity_label.replace(/ — .*$/, "") + " has been received by the WVFP sponsorship team.";
     formDone.focus();
+  }
+
+  // The form submits only to the deployed Google Apps Script web app
+  var ENDPOINT = String(SETTINGS.formEndpoint || "").trim();
+  var ENDPOINT_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(ENDPOINT);
+  if (!ENDPOINT_OK && window.console) {
+    console.error("WVFP sponsorship form: settings.formEndpoint must be the Apps Script web app URL " +
+      "(https://script.google.com/macros/s/…/exec). Current value: " + (ENDPOINT || "(empty)"));
   }
 
   form.addEventListener("submit", function (e) {
@@ -417,11 +420,10 @@
 
     var d = collect();
 
-    // No server configured: hand off to the visitor's email app instead
-    if (!SETTINGS.formEndpoint) {
-      if ($("#f-company").value || Date.now() - formStarted < 2500) { finish(d, false); return; }
-      window.location.href = mailtoFor(d);
-      finish(d, true);
+    // Never fall back to opening an email app; without a valid endpoint, say so
+    if (!ENDPOINT_OK) {
+      showError("Our inquiry form isn't available right now. Please email us at " +
+        "<a href=\"mailto:" + (SETTINGS.contactEmail || "") + "\">" + (SETTINGS.contactEmail || "") + "</a>.");
       return;
     }
 
@@ -431,7 +433,7 @@
 
     sendInquiry(payloadFor(d))
       .then(function (result) {
-        if (result && result.ok === true) { finish(d, false); return; }
+        if (result && result.ok === true) { finish(d); return; }
         showServerError(result || {}, d);
       })
       .catch(function () {
@@ -459,7 +461,7 @@
   function sendInquiry(payload) {
     var controller = window.AbortController ? new AbortController() : null;
     var timer = controller ? setTimeout(function () { controller.abort(); }, 25000) : null;
-    return fetch(SETTINGS.formEndpoint, {
+    return fetch(ENDPOINT, {
       method: "POST",
       body: new URLSearchParams(payload),
       redirect: "follow",

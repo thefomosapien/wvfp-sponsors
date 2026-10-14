@@ -102,14 +102,20 @@ board votes and the notice disappears.
 
 ## Inquiry form setup
 
-Out of the box, `formEndpoint` is empty. In that case, submitting the form opens
-the visitor's email app with a prefilled message to `contactEmail`.
+The form submits **only** to the Google Apps Script web app set in
+`settings.formEndpoint` (`assets/js/sponsorship-data.js`). It is connected to the live
+deployment:
 
-The recommended setup sends every inquiry straight into the prospect tracker and
-emails the owner. It takes about 10 minutes:
+```
+https://script.google.com/macros/s/AKfycbyBW4NVFmXvJiJSJY083xm6nD141_xQDwxt4FVbqv5NDa3A3Qu0fLM5F1gjD_GgnvQE/exec
+```
 
-1. Follow the steps at the top of `integrations/google-apps-script.gs`.
-2. Paste the resulting `/exec` URL into `settings.formEndpoint`.
+- It never opens the visitor's email app. If the endpoint is missing or isn't a
+  `https://script.google.com/macros/s/…/exec` URL, the form shows "isn't available right
+  now" with the contact email, and logs the problem to the browser console.
+- The thank-you screen appears only after the script replies `{"ok": true}`.
+- If you create a **new** deployment, its URL changes: update `formEndpoint`. Redeploying
+  with **Manage deployments → Edit → New version** keeps the same URL.
 
 ### What the script does with each submission
 
