@@ -144,14 +144,13 @@
           <p class="cat__duration">Seasonal field visibility</p>
           <p class="cat__label">What you get</p>
           <ul class="checks">
-            <li>Signage displayed at WVFP fields</li>
-            <li>Recognition on our sponsor webpage</li>
+            <li>Visibility at WVFP fields</li>
+            <li>Website sponsor recognition</li>
             <li>Social media appreciation</li>
           </ul>
-          <p class="cat__variants">Shared or dedicated banners available</p>
           <p class="cat__avail" hidden></p>
           <div class="cat__actions">
-            <button type="button" class="btn btn--primary" data-open="dlg-field">View options</button>
+            <button type="button" class="btn btn--primary" data-open="dlg-field">View details</button>
             <a href="#inquire" class="cat__inquire" data-select="field">Inquire <span aria-hidden="true">→</span></a>
           </div>
         </div>
@@ -170,14 +169,13 @@
           <p class="cat__duration">Spring or Fall season</p>
           <p class="cat__label">What you get</p>
           <ul class="checks">
-            <li>Your logo on recreational league jerseys</li>
-            <li>Featured recognition on our sponsor webpage</li>
-            <li>Two social media appreciation posts</li>
+            <li>Your logo on player jerseys</li>
+            <li>Featured website recognition</li>
+            <li>Social media appreciation</li>
           </ul>
-          <p class="cat__variants">One official jersey sponsor each season</p>
           <p class="cat__avail" hidden></p>
           <div class="cat__actions">
-            <button type="button" class="btn btn--primary" data-open="dlg-jersey">View options</button>
+            <button type="button" class="btn btn--primary" data-open="dlg-jersey">View details</button>
             <a href="#inquire" class="cat__inquire" data-select="jersey">Inquire <span aria-hidden="true">→</span></a>
           </div>
         </div>
@@ -204,11 +202,10 @@
           <p class="cat__duration">Annual presenting partnership</p>
           <p class="cat__label">What you get</p>
           <ul class="checks">
-            <li>Two large signs on the Snack Shack doors</li>
-            <li>“Snack Shack presented by” recognition</li>
-            <li>Two social media appreciation posts</li>
+            <li>Signs on the Snack Shack doors</li>
+            <li>“Presented by” recognition</li>
+            <li>Social media appreciation</li>
           </ul>
-          <p class="cat__variants">One presenting sponsor at a time</p>
           <p class="cat__avail" hidden></p>
           <div class="cat__actions">
             <button type="button" class="btn btn--primary" data-open="dlg-snack">View details</button>
@@ -249,14 +246,13 @@
           <p class="cat__duration">Single campaign or annual website placement</p>
           <p class="cat__label">What you get</p>
           <ul class="checks">
-            <li>Your logo or post in front of WVFP families online</li>
+            <li>Visibility on our website or social media</li>
             <li>A clickable link to your business</li>
-            <li>Listing on our sponsor webpage</li>
+            <li>Website sponsor recognition</li>
           </ul>
-          <p class="cat__variants">Website sponsor or Digital Feature</p>
           <p class="cat__avail" hidden></p>
           <div class="cat__actions">
-            <button type="button" class="btn btn--primary" data-open="dlg-digital">View options</button>
+            <button type="button" class="btn btn--primary" data-open="dlg-digital">View details</button>
             <a href="#inquire" class="cat__inquire" data-select="digital">Inquire <span aria-hidden="true">→</span></a>
           </div>
         </div>
@@ -279,6 +275,7 @@
     <div class="tiers">
       <article class="tier tier--bronze reveal">
         <p class="tier__name">Bronze</p>
+        <p class="tier__tag">Show your support</p>
         <p class="tier__price">$250</p>
         <ul class="checks">
           <li>Business name on our sponsor webpage</li>
@@ -289,6 +286,7 @@
       </article>
       <article class="tier tier--silver reveal">
         <p class="tier__name">Silver</p>
+        <p class="tier__tag">Get recognized</p>
         <p class="tier__price">$500</p>
         <ul class="checks">
           <li>Linked logo on our sponsor webpage</li>
@@ -298,14 +296,16 @@
         <a href="#inquire" class="btn btn--outline btn--block" data-select="silver">Choose Silver</a>
       </article>
       <article class="tier tier--gold reveal">
+        <p class="tier__flag">Most recognition</p>
         <p class="tier__name">Gold</p>
+        <p class="tier__tag">Become a featured supporter</p>
         <p class="tier__price">$1,000</p>
         <ul class="checks">
           <li>Enhanced placement on our sponsor webpage</li>
           <li>Two individual social posts</li>
           <li>Plus everything in Silver</li>
         </ul>
-        <a href="#inquire" class="btn btn--outline btn--block" data-select="gold">Choose Gold</a>
+        <a href="#inquire" class="btn btn--primary btn--block" data-select="gold">Choose Gold</a>
       </article>
     </div>
 
@@ -314,7 +314,7 @@
     <details class="more reveal">
       <summary>Compare levels &amp; terms</summary>
       <div class="more__body">
-        <div class="compare">
+        <div class="compare compare--tiers">
           <table>
             <caption class="visually-hidden">Community supporter benefits compared</caption>
             <thead>
@@ -414,12 +414,16 @@
 
     <div class="form-card reveal">
       <form id="inquiryForm" novalidate>
-        <div class="form-selected" id="formSelected" hidden>
-          <span>You're asking about</span>
-          <strong id="formSelectedName"></strong>
+        <div class="interest" id="interest" hidden>
+          <div class="interest__text">
+            <span class="interest__label">Your interest</span>
+            <strong class="interest__name" id="interestName"></strong>
+            <span class="interest__price" id="interestPrice"></span>
+          </div>
+          <button type="button" class="interest__change" id="interestChange" aria-controls="opportunityField">Change</button>
         </div>
 
-        <div class="field">
+        <div class="field" id="opportunityField">
           <label for="f-opportunity">I'm interested in <span class="req" aria-hidden="true">*</span></label>
           <select id="f-opportunity" name="opportunity" required>
             <option value="not-sure">Not sure yet — help me choose</option>
@@ -443,8 +447,8 @@
               <option value="in-kind">In-kind goods or services</option>
             </optgroup>
           </select>
-          <p class="field__hint" id="availHint" aria-live="polite"></p>
         </div>
+        <p class="field__hint field__hint--avail" id="availHint" aria-live="polite"></p>
 
         <fieldset class="field field--season" id="seasonField" hidden>
           <legend>Which season?</legend>
@@ -454,6 +458,8 @@
             <label><input type="radio" name="season" value="either" checked /><span>Either / both</span></label>
           </div>
         </fieldset>
+
+        <p class="form-intro">Tell us a little about your business, and our sponsorship team will follow up with the details.</p>
 
         <div class="field-row">
           <div class="field">
@@ -472,18 +478,18 @@
             <input id="f-email" name="email" type="email" autocomplete="email" required />
           </div>
           <div class="field">
-            <label for="f-phone">Phone <span class="choice">optional</span></label>
+            <label for="f-phone">Phone <span class="opt">optional</span></label>
             <input id="f-phone" name="phone" type="tel" autocomplete="tel" />
           </div>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="f-website">Business website <span class="choice">optional</span></label>
+            <label for="f-website">Business website <span class="opt">optional</span></label>
             <input id="f-website" name="website" type="text" inputmode="url" autocomplete="url" placeholder="yourbusiness.com" />
           </div>
           <div class="field">
-            <label for="f-budget">Budget range <span class="choice">optional</span></label>
+            <label for="f-budget">Budget range <span class="opt">optional</span></label>
             <select id="f-budget" name="budget">
               <option value="">Prefer not to say</option>
               <option>Under $500</option>
@@ -496,7 +502,7 @@
         </div>
 
         <div class="field">
-          <label for="f-message">Anything else we should know? <span class="choice">optional</span></label>
+          <label for="f-message">Anything else we should know? <span class="opt">optional</span></label>
           <textarea id="f-message" name="message" rows="4" placeholder="Goals for your sponsorship, questions, timing, in-kind ideas…"></textarea>
         </div>
 

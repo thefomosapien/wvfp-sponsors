@@ -8,6 +8,7 @@
   "use strict";
 
   document.documentElement.classList.remove("no-js");
+  document.documentElement.classList.add("js");
 
   var DATA = window.WVFP || { settings: {}, inventory: {}, sponsors: [] };
   var SETTINGS = DATA.settings || {};
@@ -139,7 +140,7 @@
 
   function shortName(key) {
     var n = (INVENTORY[key] && INVENTORY[key].name) || key;
-    return n.replace(/ (Sponsorship|Sponsor|Banner)$/, "").replace(/^Official /, "");
+    return n.replace(/ (Sponsorship|Sponsor)$/, "").replace(/^Official /, "");
   }
 
   // Dialog option cards
@@ -174,6 +175,41 @@
     }
     if (msg) { el.textContent = msg; el.hidden = false; }
   });
+
+  /* ---------- Community levels: expandable comparisons for small screens ---------- */
+  var tierTable = $(".compare--tiers table");
+  if (tierTable) {
+    var heads = $$("thead th", tierTable).slice(1).map(function (th) { return th.textContent.trim(); });
+    var prices = { Bronze: "$250", Silver: "$500", Gold: "$1,000" };
+    var wrap = document.createElement("div");
+    wrap.className = "compare-m";
+    heads.forEach(function (level, col) {
+      var d = document.createElement("details");
+      d.setAttribute("data-level", level.toLowerCase());
+      var sum = document.createElement("summary");
+      sum.appendChild(document.createTextNode(level + " "));
+      var pr = document.createElement("span");
+      pr.textContent = prices[level] || "";
+      sum.appendChild(pr);
+      d.appendChild(sum);
+      var ul = document.createElement("ul");
+      $$("tbody tr", tierTable).forEach(function (tr) {
+        var cell = tr.children[col + 1];
+        var no = !!$(".no", cell);
+        var li = document.createElement("li");
+        if (no) li.className = "is-no";
+        var mark = document.createElement("b");
+        mark.textContent = no ? "—" : ($(".yes", cell) ? "✓" : cell.textContent.trim());
+        mark.setAttribute("aria-label", no ? "Not included" : "Included");
+        li.appendChild(mark);
+        li.appendChild(document.createTextNode(tr.children[0].textContent.trim()));
+        ul.appendChild(li);
+      });
+      d.appendChild(ul);
+      wrap.appendChild(d);
+    });
+    tierTable.parentNode.parentNode.insertBefore(wrap, tierTable.parentNode.nextSibling);
+  }
 
   /* ============================================================
      OPTION DIALOGS
@@ -237,8 +273,13 @@
   var form = $("#inquiryForm");
   var select = $("#f-opportunity");
   var seasonField = $("#seasonField");
-  var selectedBox = $("#formSelected");
-  var selectedName = $("#formSelectedName");
+  var interestBox = $("#interest");
+  var interestName = $("#interestName");
+  var interestPrice = $("#interestPrice");
+  var interestChange = $("#interestChange");
+  var oppField = $("#opportunityField");
+  // While someone is actively choosing from the dropdown, keep it open
+  var pickerOpen = false;
   var availHint = $("#availHint");
   var formCard = $(".form-card");
   var formDone = $("#formDone");
@@ -276,9 +317,15 @@
 
   function updateSelected() {
     var v = select.value;
-    var show = v && v !== "not-sure";
-    selectedBox.hidden = !show;
-    if (show) selectedName.textContent = optionLabel(v);
+    var chosen = v && v !== "not-sure";
+    // Show the selection back as "Your interest", with the dropdown tucked behind "Change"
+    interestBox.hidden = !chosen || pickerOpen;
+    oppField.hidden = chosen && !pickerOpen;
+    if (chosen) {
+      var parts = optionLabel(v).split(" — ");
+      interestName.textContent = parts[0];
+      interestPrice.textContent = parts.slice(1).join(" — ");
+    }
     seasonField.hidden = v !== "jersey";
 
     availHint.removeAttribute("data-state");
@@ -307,6 +354,12 @@
     if (m) { season = m[1]; value = "jersey"; }
     if (!$("option[value='" + value + "']", select)) return;
     select.value = value;
+    pickerOpen = false;
+    if (value !== "not-sure") {
+      interestBox.classList.remove("is-new");
+      void interestBox.offsetWidth; // restart the highlight animation
+      interestBox.classList.add("is-new");
+    }
     if (season) {
       var r = $("input[name='season'][value='" + season + "']", seasonField);
       if (r && !r.disabled) r.checked = true;
@@ -315,6 +368,11 @@
   }
 
   select.addEventListener("change", updateSelected);
+  interestChange.addEventListener("click", function () {
+    pickerOpen = true;
+    updateSelected();
+    select.focus();
+  });
   seasonField.addEventListener("change", updateSelected);
 
   document.addEventListener("click", function (e) {
@@ -486,6 +544,7 @@
     var keep = select.value;
     form.reset();
     select.value = keep;
+    pickerOpen = false;
     updateSelected();
     formStarted = Date.now();
     formDone.hidden = true;
@@ -496,17 +555,21 @@
   /* ============================================================
      COMMUNITY PARTNER DIRECTORY
      ============================================================ */
+  // Four tiers of prominence. Placement is driven entirely by each sponsor's
+  // `level` in the data file — adding or removing sponsors never needs a layout change.
+  //   premium   — featured website sponsors (largest)
+  //   prominent — major partners, jersey, Snack Shack, and Gold
+  //   grid      — every other logo, in a consistent grid
+  //   names     — Bronze (text), and verified past supporters
   var DIR_GROUPS = [
-    { id: "website",  title: "Official Website Partners", levels: ["website"],               size: "xl", logos: true },
-    { id: "partner",  title: "Major Partners",            levels: ["partner"],               size: "xl", logos: true },
-    { id: "featured", title: "Featured Partners",         levels: ["jersey", "snack-shack"], size: "lg", logos: true },
-    { id: "gold",     title: "Gold Supporters",           levels: ["gold"],                  size: "lg", logos: true },
-    { id: "silver",   title: "Silver Supporters",         levels: ["silver"],                size: "md", logos: true },
-    { id: "bronze",   title: "Bronze Supporters",         levels: ["bronze"],                size: "sm", logos: false },
-    { id: "field",    title: "Field & Digital Sponsors",  levels: ["field", "digital"],      size: "sm", logos: true },
-    { id: "in-kind",  title: "In-Kind Partners",          levels: ["in-kind"],               size: "sm", logos: true },
-    { id: "past",     title: "Thank You to Past Supporters", levels: ["past"],               size: "sm", logos: false }
+    { id: "website", short: "Website",   title: "Featured Website Sponsors",     levels: ["website"],                                  style: "premium",   size: "xl", logos: true,  limit: 0 },
+    { id: "premier", short: "Premier",   title: "Premier Partners",              levels: ["partner", "jersey", "snack-shack", "gold"], style: "prominent", size: "lg", logos: true,  limit: 9 },
+    { id: "sponsors", short: "Sponsors",  title: "Sponsors",                      levels: ["silver", "field", "digital", "in-kind"],    style: "grid",      size: "sm", logos: true,  limit: 15 },
+    { id: "bronze", short: "Bronze",    title: "Bronze Supporters",             levels: ["bronze"],                                   style: "names",     logos: false },
+    { id: "past", short: "Past",      title: "Thank You to Past Supporters",  levels: ["past"],                                     style: "names",     logos: false }
   ];
+  // Within a tier, higher commitments come first, then alphabetical
+  var LEVEL_RANK = ["website", "partner", "jersey", "snack-shack", "gold", "silver", "field", "digital", "in-kind", "bronze", "past"];
   var LEVEL_NAMES = {
     "website": "Website Partner", "partner": "Major Partner", "jersey": "Jersey Sponsor",
     "snack-shack": "Snack Shack Presenting Sponsor", "gold": "Gold", "silver": "Silver", "bronze": "Bronze",
@@ -556,7 +619,9 @@
 
   function membersOf(g) {
     return active.filter(function (s) { return g.levels.indexOf(s.level) !== -1; })
-      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+      .sort(function (a, b) {
+        return (LEVEL_RANK.indexOf(a.level) - LEVEL_RANK.indexOf(b.level)) || a.name.localeCompare(b.name);
+      });
   }
 
   function renderDirectory(filter) {
@@ -567,7 +632,7 @@
       if (!members.length) return;
 
       var section = document.createElement("div");
-      section.className = "dir-group";
+      section.className = "dir-group dir-group--" + g.style;
       var h = document.createElement("h3");
       h.className = "dir-group__title";
       h.textContent = g.title;
@@ -576,12 +641,32 @@
       if (g.logos) {
         var grid = document.createElement("div");
         grid.className = "dir-grid dir-grid--" + g.size;
-        members.forEach(function (s) { grid.appendChild(card(s, true)); });
+        // Premium sponsors share the row evenly (1–3 across; 4 becomes 2 × 2)
+        if (g.style === "premium") grid.style.setProperty("--premium-cols", members.length === 4 ? 2 : Math.min(members.length, 3));
+        members.forEach(function (s, i) {
+          var c = card(s, true);
+          if (g.limit && i >= g.limit) c.classList.add("is-extra");
+          grid.appendChild(c);
+        });
         section.appendChild(grid);
+        // Long tiers collapse behind "Show all" so the wall of logos never runs away
+        if (g.limit && members.length > g.limit) {
+          var more = document.createElement("button");
+          more.type = "button";
+          more.className = "dir-more";
+          more.setAttribute("aria-expanded", "false");
+          more.textContent = "Show all " + members.length;
+          more.addEventListener("click", function () {
+            var open = section.classList.toggle("is-expanded");
+            more.setAttribute("aria-expanded", open ? "true" : "false");
+            more.textContent = open ? "Show fewer" : "Show all " + members.length;
+          });
+          section.appendChild(more);
+        }
       } else {
         // Bronze: business name in text (no linked logo)
         var ul = document.createElement("ul");
-        ul.className = "dir-text-list";
+        ul.className = "dir-text-list" + (g.id === "past" ? " dir-text-list--past" : "");
         members.forEach(function (s) {
           var li = document.createElement("li");
           li.textContent = s.name + (s.years ? " (" + s.years + ")" : "");
@@ -600,7 +685,7 @@
     if (present.length > 1) {
       dirFilters.hidden = false;
       [{ id: "all", title: "All", count: active.length }].concat(present.map(function (g) {
-        return { id: g.id, title: g.title.replace(/ (Supporters|Partners|Sponsors)$/, ""), count: membersOf(g).length };
+        return { id: g.id, title: g.short, count: membersOf(g).length };
       })).forEach(function (f, i) {
         var b = document.createElement("button");
         b.type = "button";

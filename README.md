@@ -16,11 +16,11 @@ official logo files.
 
 1. **Hero:** "Support the girls. Strengthen the game.", two calls to action (Explore Sponsorships · Become a Partner), and one line: "Opportunities starting at $250"
 2. **About WVFP:** the league's story, quick facts, and what sponsorship supports
-3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, three benefits, and "View options." Variants, comparisons, availability, and full terms open in a modal.
-4. **Community supporters** ("Make a difference with a contribution at any level"): Bronze, Silver, and Gold as lighter typographic cards, a pointer back to featured sponsorships for businesses that want advertising, and a "Compare levels & terms" disclosure
+3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, exactly three short benefits, and "View details." Variants, comparisons, availability, and full terms open in a modal.
+4. **Community supporters** ("Make a difference with a contribution at any level"): Bronze ("Show your support"), Silver ("Get recognized"), and Gold ("Become a featured supporter") with progressively more visual weight, a pointer back to featured sponsorships for businesses that want advertising, and a "Compare levels & terms" table (expandable per-level comparisons on phones)
 5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind support
-6. **Our community partners:** a filterable directory generated from the data file, with optional verified past supporters
-7. **Inquiry form:** the clicked interest is preselected, Jersey adds a Spring/Fall choice, and the form includes spam protection and a confirmation screen
+6. **Our community partners:** a filterable directory generated from the data file, in four tiers (see below)
+7. **Inquiry form:** the clicked interest appears as "Your interest: … · Change", Jersey adds a Spring/Fall choice, and the form includes spam protection and a confirmation screen
 8. **FAQ** and a closing call to action
 
 ## Evergreen by design
@@ -59,6 +59,19 @@ source of truth.
   logo: "assets/img/sponsors/example-plumbing.png",
   url: "https://example.com", until: "2027-12-31" }
 ```
+
+**How the directory scales.** Placement comes entirely from each sponsor's `level`, so
+adding or removing sponsors never needs a layout change:
+
+| Tier | Levels | Display |
+| --- | --- | --- |
+| Featured Website Sponsors | `website` | Largest cards, gold border, always fully shown |
+| Premier Partners | `partner`, `jersey`, `snack-shack`, `gold` | Large cards; first 9 shown, then "Show all" |
+| Sponsors | `silver`, `field`, `digital`, `in-kind` | Consistent logo grid; first 15 shown, then "Show all" |
+| Bronze Supporters / Past Supporters | `bronze`, `past` | Business names |
+
+Within a tier, bigger commitments come first, then names A–Z. Filter buttons appear
+automatically once more than one tier has sponsors.
 
 Verified historical supporters can be listed with `level: "past"` (and optional
 `years: "1985–2010"`). They appear as text under "Thank You to Past Supporters." Until
