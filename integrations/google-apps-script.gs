@@ -27,6 +27,7 @@ var SHEET_NAME = "Website Inquiries";
 var COLUMNS = [
   ["submitted_at", "Submitted"],
   ["opportunity_label", "Interested in"],
+  ["booking_season", "Booking season"],
   ["organization", "Business / organization"],
   ["name", "Contact name"],
   ["email", "Email"],

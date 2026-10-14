@@ -1,6 +1,6 @@
-# West Valley Fast Pitch — 2027 Sponsorships
+# West Valley Fast Pitch — Sponsorships
 
-A one-page site that invites local businesses to sponsor West Valley Fast Pitch
+An evergreen, one-page site that invites local businesses to sponsor West Valley Fast Pitch
 and turns interest into a conversation. Recommended home:
 `wvfastpitch.org/sponsors`.
 
@@ -14,14 +14,22 @@ official logo files.
 
 ## Page sections
 
-1. **Hero:** "Support the girls. Strengthen the game." plus a starting-price ladder
-2. **Make an impact:** WVFP's story, what sponsorship funds, and why businesses partner
-3. **Featured sponsorships:** Fields, Jerseys, Snack Shack, and Digital, with price, term, live availability, benefits, and limits
-4. **Community levels:** Bronze, Silver, and Gold cards, a comparison table, and a "mix & match" example
-5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind gifts
-6. **Our sponsors:** a filterable directory generated from the data file
-7. **Inquiry form:** the clicked opportunity is preselected, with spam protection and a confirmation screen
+1. **Hero:** "Support the girls. Strengthen the game." plus a two-path chooser (Featured Sponsorships / Community Supporter, with Custom as a third option)
+2. **About WVFP:** the league's story, quick facts, and what sponsorship supports
+3. **Featured sponsorships:** four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, term, three benefits, and "View options." Variants, comparisons, availability, and full terms open in a modal.
+4. **Community supporters:** Bronze, Silver, and Gold as lighter typographic cards, with a "Compare levels & terms" disclosure
+5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind support
+6. **Our community partners:** a filterable directory generated from the data file
+7. **Inquiry form:** the clicked interest is preselected, Jersey adds a Spring/Fall choice, and the form includes spam protection and a confirmation screen
 8. **FAQ** and a closing call to action
+
+## Evergreen by design
+
+The page sells WVFP as a long-standing community partner, not a single season. The only
+year on the page comes from `settings.bookingSeason` in the data file, and it appears only
+where it matters operationally: availability inside the option modals ("Now booking
+the 2027 season"), availability hints in the form, and every inquiry submission. To roll
+over to a new year, update `bookingSeason` and reset the inventory counts.
 
 ## Running locally
 
@@ -57,7 +65,7 @@ Put logo files in `assets/img/sponsors/`. A listing hides itself after its
 List a business once, at its highest recognition level.
 
 **Pricing status.** `pricingStatus: "proposed"` shows a gold notice saying the
-2027 program is pending board approval. Change it to `"approved"` after the
+program is pending board approval. Change it to `"approved"` after the
 board votes and the notice disappears.
 
 ## Inquiry form setup
@@ -82,9 +90,22 @@ Outreach emails can deep-link with the opportunity already selected:
 https://wvfastpitch.org/sponsors/?opportunity=jersey-spring#inquire
 ```
 
-Valid keys: `shared-banner`, `dedicated-banner`, `snack-shack`, `jersey-spring`,
-`jersey-fall`, `website`, `digital-feature`, `bronze`, `silver`, `gold`,
-`custom`, `in-kind`, `not-sure`.
+Valid keys: `field`, `shared-banner`, `dedicated-banner`, `jersey`, `jersey-spring`,
+`jersey-fall`, `snack-shack`, `digital`, `website`, `digital-feature`, `bronze`,
+`silver`, `gold`, `custom`, `in-kind`, `not-sure`. (`jersey-spring` and `jersey-fall`
+select Jersey with that season already chosen.)
+
+## Photography
+
+Each image placement has a specific art direction and a fixed file in
+`assets/img/photos/` (`hero.jpg`, `about.jpg`, `field.jpg`, `jersey.jpg`, `custom.jpg`).
+The Snack Shack and Digital cards use built-in placement mockups for now. See
+**[docs/photography-art-direction.md](docs/photography-art-direction.md)** for the full
+brief, ratios, and permissions checklist. Add `?slots` to the URL to see every placement
+labeled on the page.
+
+The current photos are stand-ins from the brand guide mockups. Replace them with real,
+released WVFP photography before launch.
 
 ## Before launch
 
@@ -92,7 +113,8 @@ Valid keys: `shared-banner`, `dedicated-banner`, `snack-shack`, `jersey-spring`,
 - [ ] Confirm the public sponsorship email (`contactEmail`, `NOTIFY_EMAILS` in the Apps Script)
 - [ ] Deploy the Apps Script and set `formEndpoint`, then send a test inquiry
 - [ ] Verify banner capacity and locations, Snack Shack signage rights, and jersey vendor deadlines
-- [ ] Replace placeholder and mockup photography with real, approved league photos where possible
+- [ ] Replace stand-in photos following `docs/photography-art-direction.md`, with parent/guardian releases for identifiable minors
+- [ ] Decide whether Community Supporter recognition runs 12 months from activation or by calendar year, and update the terms to match
 - [ ] Add confirmed sponsors to `sponsors`
 
 ## Structure
@@ -102,6 +124,8 @@ index.html                         # all page content
 assets/css/styles.css              # brand tokens + layout
 assets/js/sponsorship-data.js      # settings, inventory, sponsors (edit this)
 assets/js/main.js                  # availability, form, directory, nav
-assets/img/                        # brand logos, photos, favicons
+assets/img/photos/                 # one file per photo placement
+assets/img/                        # brand logos, favicons
+docs/photography-art-direction.md  # image briefs per placement
 integrations/google-apps-script.gs # form -> Google Sheet + email
 ```

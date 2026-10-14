@@ -2,9 +2,13 @@
    West Valley Fast Pitch — Sponsorship data
    ------------------------------------------------------------
    This is the ONE file to edit when something changes:
-     • SETTINGS   — contact email, form endpoint, pricing status
+     • SETTINGS   — contact email, form endpoint, booking season
      • INVENTORY  — how many of each opportunity are sold/held
-     • SPONSORS   — confirmed partners shown in "Our Sponsors"
+     • SPONSORS   — confirmed partners shown in "Our Community Partners"
+
+   The public page is evergreen. The only place a year appears is
+   `bookingSeason`, which is shown next to availability and in the
+   inquiry form — update it when you open the next season's inventory.
 
    Keep INVENTORY in sync with the WVFP Sponsorship Prospect
    Tracker (the source of truth). The page never shows an
@@ -20,15 +24,17 @@ window.WVFP = {
     formEndpoint: "",
     contactEmail: "sponsors@wvfastpitch.org", // TODO: confirm the public sponsorship email
 
-    // "proposed" — shows a "Proposed 2027 pricing · pending board approval" notice.
-    // "approved" — removes the notice once the board approves the program.
-    pricingStatus: "proposed",
+    // The season/year currently being sold. Shown only beside availability
+    // ("Now booking 2027") and attached to every inquiry.
+    bookingSeason: "2027",
 
-    season: "2027"
+    // "proposed" — shows a "pricing pending board approval" notice.
+    // "approved" — removes the notice once the board approves the program.
+    pricingStatus: "proposed"
   },
 
   /* ----------------------------------------------------------
-     INVENTORY
+     INVENTORY — for the current bookingSeason
      capacity: total positions offered (null = unlimited)
      sold:     confirmed (accepted + paid) positions
      held:     positions on hold for renewals / pending agreements
@@ -38,11 +44,11 @@ window.WVFP = {
   inventory: {
     "shared-banner":    { name: "Shared Field Banner",            price: 350,  capacity: 12,   sold: 0, held: 0, open: true },
     "dedicated-banner": { name: "Dedicated Field Banner",         price: 750,  capacity: 12,   sold: 0, held: 0, open: true },
+    "jersey-spring":    { name: "Spring Jersey Sponsorship",      price: 4500, capacity: 1,    sold: 0, held: 0, open: true },
+    "jersey-fall":      { name: "Fall Jersey Sponsorship",        price: 2500, capacity: 1,    sold: 0, held: 0, open: true },
     "snack-shack":      { name: "Snack Shack Presenting Sponsor", price: 2500, capacity: 1,    sold: 0, held: 0, open: true },
-    "jersey-spring":    { name: "Jersey Sponsor — Spring 2027",   price: 4500, capacity: 1,    sold: 0, held: 0, open: true },
-    "jersey-fall":      { name: "Jersey Sponsor — Fall 2027",     price: 2500, capacity: 1,    sold: 0, held: 0, open: true },
     "website":          { name: "Official Website Sponsor",       price: 1500, capacity: 4,    sold: 0, held: 0, open: true },
-    "digital-feature":  { name: "Digital Feature Sponsor",        price: 300,  capacity: 6,    sold: 0, held: 0, open: true, per: "per season" },
+    "digital-feature":  { name: "Digital Feature Sponsor",        price: 300,  capacity: 6,    sold: 0, held: 0, open: true, per: "this season" },
     "bronze":           { name: "Bronze Community Supporter",     price: 250,  capacity: null, sold: 0, held: 0, open: true },
     "silver":           { name: "Silver Community Supporter",     price: 500,  capacity: null, sold: 0, held: 0, open: true },
     "gold":             { name: "Gold Community Supporter",       price: 1000, capacity: null, sold: 0, held: 0, open: true }

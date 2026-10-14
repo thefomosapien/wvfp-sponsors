@@ -1,8 +1,8 @@
 /* ============================================================
    West Valley Fast Pitch — Sponsorships
-   Nav, availability from the inventory record, form prefill +
-   submission, and the sponsor directory. No dependencies.
-   Data lives in sponsorship-data.js (window.WVFP).
+   Nav, option dialogs, availability from the inventory record,
+   form prefill + submission, and the partner directory.
+   No dependencies. Data lives in sponsorship-data.js (window.WVFP).
    ============================================================ */
 (function () {
   "use strict";
@@ -12,12 +12,17 @@
   var DATA = window.WVFP || { settings: {}, inventory: {}, sponsors: [] };
   var SETTINGS = DATA.settings || {};
   var INVENTORY = DATA.inventory || {};
+  var SEASON = SETTINGS.bookingSeason ? String(SETTINGS.bookingSeason) : "";
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var params = new URLSearchParams(window.location.search);
 
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
-  /* ---------- Header state ---------- */
+  // ?slots labels every photo placement with its art-direction brief
+  if (params.has("slots")) document.documentElement.classList.add("show-slots");
+
+  /* ---------- Header state + mobile CTA ---------- */
   var header = $("#siteHeader");
   var mobileCta = $("#mobileCta");
   var hero = $("#hero");
@@ -88,52 +93,142 @@
   }
   onScroll();
 
-  /* ---------- Settings: pricing status + contact email ---------- */
+  /* ---------- Settings: pricing status, contact email, booking season ---------- */
   if (SETTINGS.pricingStatus === "approved") {
     var bar = $("#statusBar");
     if (bar) bar.remove();
   }
-  var email = SETTINGS.contactEmail;
-  if (email) {
+  if (SETTINGS.contactEmail) {
     $$(".js-contact-email").forEach(function (a) {
-      a.href = "mailto:" + email;
-      a.textContent = email;
+      a.href = "mailto:" + SETTINGS.contactEmail;
+      a.textContent = SETTINGS.contactEmail;
     });
+  }
+  if (SEASON) {
+    $$(".js-booking").forEach(function (el) { el.textContent = "Now booking the " + SEASON + " season."; });
   }
 
   /* ============================================================
      AVAILABILITY — computed from the inventory record
      ============================================================ */
+  // Category keys used by cards and the form map to their variants
+  var GROUPS = {
+    field: ["shared-banner", "dedicated-banner"],
+    jersey: ["jersey-spring", "jersey-fall"],
+    digital: ["website", "digital-feature"]
+  };
+
   function availability(key) {
     var item = INVENTORY[key];
     if (!item) return null;
-    if (item.open === false) return { state: "out", label: "Not currently available", soldOut: true };
+    if (item.open === false) return { state: "out", label: "Not currently available", soldOut: true, left: 0 };
     if (item.capacity == null) return { state: "ok", label: "Open to all", soldOut: false };
     var left = Math.max(0, item.capacity - (item.sold || 0) - (item.held || 0));
     var per = item.per ? " " + item.per : "";
-    if (left === 0) return { state: "out", label: item.capacity === 1 ? "Sold out" : "Sold out" + per, soldOut: true, left: 0 };
-    if (item.capacity === 1) return { state: "ok", label: "1 sponsor · Available", soldOut: false, left: 1 };
+    var when = SEASON ? " for " + SEASON : "";
+    if (left === 0) return { state: "out", label: "Sold out" + when, soldOut: true, left: 0 };
+    if (item.capacity === 1) return { state: "ok", label: "Available" + when, soldOut: false, left: 1 };
     var low = left <= Math.max(1, Math.floor(item.capacity / 4));
     return {
       state: low ? "low" : "ok",
-      label: (low ? "Only " + left + " left" : left + " of " + item.capacity + " available") + per,
+      label: (low ? "Only " + left + " left" : left + " of " + item.capacity + " available") + per + when,
       soldOut: false,
       left: left
     };
   }
 
+  function shortName(key) {
+    var n = (INVENTORY[key] && INVENTORY[key].name) || key;
+    return n.replace(/ (Sponsorship|Sponsor|Banner)$/, "").replace(/^Official /, "");
+  }
+
+  // Dialog option cards
   $$("[data-product]").forEach(function (el) {
     var key = el.getAttribute("data-product");
     var a = availability(key);
     if (!a) return;
-    var avail = $(".offer__avail", el);
+    var avail = $(".choice__avail", el);
     if (avail) { avail.textContent = a.label; avail.setAttribute("data-state", a.state); }
     if (a.soldOut) {
       el.classList.add("is-soldout");
-      $$("[data-select='" + key + "']", el).forEach(function (btn) {
-        btn.textContent = "Join the waitlist";
-      });
+      $$("[data-select='" + key + "']", el).forEach(function (btn) { btn.textContent = "Join the waitlist"; });
     }
+  });
+
+  // Category cards: only speak up when availability is notable
+  $$("[data-category]").forEach(function (card) {
+    var keys = card.getAttribute("data-category").split(" ");
+    var states = keys.map(function (k) { return { key: k, a: availability(k) }; }).filter(function (s) { return s.a; });
+    var out = states.filter(function (s) { return s.a.soldOut; });
+    var low = states.filter(function (s) { return s.a.state === "low"; });
+    var el = $(".cat__avail", card);
+    if (!el || !states.length) return;
+    var msg = "";
+    if (out.length === states.length) {
+      msg = "Currently sold out" + (SEASON ? " for " + SEASON : "") + " — join the waitlist";
+      el.setAttribute("data-state", "out");
+    } else if (out.length) {
+      msg = out.map(function (s) { return shortName(s.key); }).join(" & ") + " sold out — other options available";
+    } else if (low.length) {
+      msg = "Limited availability" + (SEASON ? " for " + SEASON : "");
+    }
+    if (msg) { el.textContent = msg; el.hidden = false; }
+  });
+
+  /* ============================================================
+     OPTION DIALOGS
+     ============================================================ */
+  var lastTrigger = null;
+
+  function openDialog(dlg) {
+    if (typeof dlg.showModal === "function") dlg.showModal();
+    else dlg.setAttribute("open", "");
+    document.body.classList.add("dlg-open");
+    var closeBtn = $(".dlg__close", dlg);
+    if (closeBtn) closeBtn.focus();
+  }
+  function closeDialog(dlg) {
+    // Unlock scrolling right away so a following jump to the form can scroll
+    onDialogClosed();
+    if (typeof dlg.close === "function") dlg.close();
+    else dlg.removeAttribute("open");
+  }
+  function onDialogClosed() {
+    document.body.classList.remove("dlg-open");
+  }
+
+  $$("[data-open]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var dlg = document.getElementById(btn.getAttribute("data-open"));
+      if (!dlg) return;
+      lastTrigger = btn;
+      openDialog(dlg);
+    });
+  });
+
+  $$(".dlg").forEach(function (dlg) {
+    dlg.addEventListener("close", function () {
+      onDialogClosed();
+      // Return focus to the card unless we're heading to the form
+      if (lastTrigger && !dlg.dataset.toForm) lastTrigger.focus();
+      delete dlg.dataset.toForm;
+    });
+    // Click on the backdrop closes
+    dlg.addEventListener("click", function (e) {
+      if (e.target === dlg) closeDialog(dlg);
+      var closer = e.target.closest("[data-close]");
+      if (!closer) return;
+      if (closer.getAttribute("href") === "#inquire") {
+        e.preventDefault();
+        dlg.dataset.toForm = "1";
+        closeDialog(dlg);
+        var target = formCard || inquire;
+        target.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
+        if (history.replaceState) history.replaceState(null, "", "#inquire");
+      } else {
+        closeDialog(dlg);
+      }
+    });
   });
 
   /* ============================================================
@@ -141,6 +236,7 @@
      ============================================================ */
   var form = $("#inquiryForm");
   var select = $("#f-opportunity");
+  var seasonField = $("#seasonField");
   var selectedBox = $("#formSelected");
   var selectedName = $("#formSelectedName");
   var availHint = $("#availHint");
@@ -150,53 +246,86 @@
   var submitBtn = $("#submitBtn");
   var formStarted = Date.now();
 
-  // Mark sold-out options so nobody thinks they're reserving one
+  // Mark sold-out variants so nobody thinks they're reserving one
   $$("option", select).forEach(function (opt) {
     var a = availability(opt.value);
     if (a && a.soldOut) opt.textContent = opt.textContent + " — sold out (waitlist)";
   });
+  // Season choices for jersey
+  $$("input[name='season']", seasonField).forEach(function (r) {
+    var a = availability("jersey-" + r.value);
+    if (a && a.soldOut) {
+      r.disabled = true;
+      r.parentNode.title = a.label;
+      var em = $("em", r.parentNode);
+      if (em) em.textContent = "Sold out";
+    }
+  });
 
+  function cleanLabel(text) {
+    return text.replace(/^\s+/, "").replace(/ — sold out \(waitlist\)$/, "");
+  }
   function optionLabel(value) {
     var opt = $("option[value='" + value + "']", select);
-    return opt ? opt.textContent : value;
+    return opt ? cleanLabel(opt.textContent) : value;
+  }
+  function seasonValue() {
+    var r = $("input[name='season']:checked", seasonField);
+    return r ? r.value : "either";
   }
 
   function updateSelected() {
     var v = select.value;
     var show = v && v !== "not-sure";
     selectedBox.hidden = !show;
-    if (show) selectedName.textContent = optionLabel(v).replace(/ — sold out \(waitlist\)$/, "");
+    if (show) selectedName.textContent = optionLabel(v);
+    seasonField.hidden = v !== "jersey";
 
-    var a = availability(v);
     availHint.removeAttribute("data-state");
-    if (!a) { availHint.textContent = ""; return; }
-    if (a.soldOut) {
-      availHint.textContent = "This one is currently spoken for — we'll add you to the waitlist and suggest similar options.";
+    var keys = GROUPS[v] || (INVENTORY[v] ? [v] : []);
+    if (v === "jersey" && seasonValue() !== "either") keys = ["jersey-" + seasonValue()];
+    var info = keys.map(function (k) { return { k: k, a: availability(k) }; })
+      .filter(function (x) { return x.a && x.a.left != null; });
+    if (!info.length) { availHint.textContent = ""; return; }
+
+    if (info.every(function (x) { return x.a.soldOut; })) {
+      availHint.textContent = "Currently spoken for — we'll add you to the waitlist and suggest similar options.";
       availHint.setAttribute("data-state", "out");
-    } else if (a.left != null) {
-      availHint.textContent = "Availability: " + a.label + ". An inquiry doesn't reserve a spot — WVFP confirms in writing.";
-    } else {
-      availHint.textContent = "";
+      return;
     }
+    var parts = info.map(function (x) {
+      return shortName(x.k) + ": " + x.a.label.replace(/ for \d{4}$/, "").toLowerCase();
+    }).join(" · ");
+    availHint.textContent = (SEASON ? "Now booking " + SEASON + ". " : "") + parts +
+      ". An inquiry doesn't reserve a spot — WVFP confirms in writing.";
   }
 
   function preselect(value) {
-    if (!value || !$("option[value='" + value + "']", select)) return;
+    if (!value) return;
+    var season = null;
+    var m = /^jersey-(spring|fall)$/.exec(value);
+    if (m) { season = m[1]; value = "jersey"; }
+    if (!$("option[value='" + value + "']", select)) return;
     select.value = value;
+    if (season) {
+      var r = $("input[name='season'][value='" + season + "']", seasonField);
+      if (r && !r.disabled) r.checked = true;
+    }
     updateSelected();
   }
 
   select.addEventListener("change", updateSelected);
+  seasonField.addEventListener("change", updateSelected);
 
   document.addEventListener("click", function (e) {
     var trigger = e.target.closest("[data-select]");
     if (!trigger) return;
     var value = trigger.getAttribute("data-select");
-    // Generic "become a sponsor" buttons shouldn't wipe a choice someone already made
+    // Generic "become a partner" buttons shouldn't wipe a choice someone already made
     if (value === "not-sure" && select.value !== "not-sure") return;
     preselect(value);
     if (!formDone.hidden) return;
-    if (formCard && !prefersReduced) {
+    if (formCard && !prefersReduced && formCard.animate) {
       formCard.animate(
         [{ boxShadow: "0 0 0 0 rgba(243,193,44,.9)" }, { boxShadow: "0 0 0 14px rgba(243,193,44,0)" }],
         { duration: 900, delay: 450, easing: "ease-out" }
@@ -204,8 +333,7 @@
     }
   });
 
-  // Support links like /sponsors/?opportunity=jersey-spring#inquire for outreach emails
-  var params = new URLSearchParams(window.location.search);
+  // Deep links for outreach emails: ?opportunity=jersey-spring#inquire
   preselect(params.get("opportunity") || params.get("interest"));
   updateSelected();
 
@@ -229,7 +357,7 @@
     var err = wrap.querySelector(".field__err");
     if (err) { err.remove(); field.removeAttribute("aria-describedby"); }
   }
-  $$("input, select, textarea", form).forEach(function (f) {
+  $$("input:not([type='radio']), select, textarea", form).forEach(function (f) {
     f.addEventListener("input", function () { clearInvalid(f); });
     f.addEventListener("change", function () { clearInvalid(f); });
   });
@@ -262,6 +390,12 @@
     var out = {};
     fd.forEach(function (v, k) { out[k] = typeof v === "string" ? v.trim() : v; });
     out.opportunity_label = optionLabel(out.opportunity);
+    if (out.opportunity === "jersey") {
+      out.opportunity_label += " (" + { spring: "Spring", fall: "Fall", either: "Spring or Fall" }[out.season || "either"] + ")";
+    } else {
+      delete out.season;
+    }
+    out.booking_season = SEASON;
     out.page = window.location.href.split("#")[0];
     out.submitted_at = new Date().toISOString();
     delete out.company_fax;
@@ -274,7 +408,7 @@
       "",
       "I'd like to learn more about sponsoring West Valley Fast Pitch.",
       "",
-      "Interested in: " + d.opportunity_label,
+      "Interested in: " + d.opportunity_label + (SEASON ? " — " + SEASON : ""),
       "Business: " + d.organization,
       "Name: " + d.name,
       "Email: " + d.email
@@ -360,17 +494,17 @@
   });
 
   /* ============================================================
-     SPONSOR DIRECTORY
+     COMMUNITY PARTNER DIRECTORY
      ============================================================ */
-  var GROUPS = [
-    { id: "website",  title: "Official Website Partners", levels: ["website"],                 size: "xl", logos: true },
-    { id: "partner",  title: "Major Partners",            levels: ["partner"],                 size: "xl", logos: true },
-    { id: "featured", title: "Featured Partners",         levels: ["jersey", "snack-shack"],   size: "lg", logos: true },
-    { id: "gold",     title: "Gold Supporters",           levels: ["gold"],                    size: "lg", logos: true },
-    { id: "silver",   title: "Silver Supporters",         levels: ["silver"],                  size: "md", logos: true },
-    { id: "bronze",   title: "Bronze Supporters",         levels: ["bronze"],                  size: "sm", logos: false },
-    { id: "field",    title: "Field & Digital Sponsors",  levels: ["field", "digital"],        size: "sm", logos: true },
-    { id: "in-kind",  title: "In-Kind Partners",          levels: ["in-kind"],                 size: "sm", logos: true }
+  var DIR_GROUPS = [
+    { id: "website",  title: "Official Website Partners", levels: ["website"],               size: "xl", logos: true },
+    { id: "partner",  title: "Major Partners",            levels: ["partner"],               size: "xl", logos: true },
+    { id: "featured", title: "Featured Partners",         levels: ["jersey", "snack-shack"], size: "lg", logos: true },
+    { id: "gold",     title: "Gold Supporters",           levels: ["gold"],                  size: "lg", logos: true },
+    { id: "silver",   title: "Silver Supporters",         levels: ["silver"],                size: "md", logos: true },
+    { id: "bronze",   title: "Bronze Supporters",         levels: ["bronze"],                size: "sm", logos: false },
+    { id: "field",    title: "Field & Digital Sponsors",  levels: ["field", "digital"],      size: "sm", logos: true },
+    { id: "in-kind",  title: "In-Kind Partners",          levels: ["in-kind"],               size: "sm", logos: true }
   ];
   var LEVEL_NAMES = {
     "website": "Website Partner", "partner": "Major Partner", "jersey": "Jersey Sponsor",
@@ -417,12 +551,16 @@
     return el;
   }
 
+  function membersOf(g) {
+    return active.filter(function (s) { return g.levels.indexOf(s.level) !== -1; })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+  }
+
   function renderDirectory(filter) {
     dirList.innerHTML = "";
-    GROUPS.forEach(function (g) {
+    DIR_GROUPS.forEach(function (g) {
       if (filter && filter !== "all" && filter !== g.id) return;
-      var members = active.filter(function (s) { return g.levels.indexOf(s.level) !== -1; })
-        .sort(function (a, b) { return a.name.localeCompare(b.name); });
+      var members = membersOf(g);
       if (!members.length) return;
 
       var section = document.createElement("div");
@@ -454,22 +592,15 @@
 
   if (active.length) {
     dirEmpty.hidden = true;
-    var present = GROUPS.filter(function (g) {
-      return active.some(function (s) { return g.levels.indexOf(s.level) !== -1; });
-    });
+    var present = DIR_GROUPS.filter(function (g) { return membersOf(g).length; });
     if (present.length > 1) {
       dirFilters.hidden = false;
       [{ id: "all", title: "All", count: active.length }].concat(present.map(function (g) {
-        return {
-          id: g.id,
-          title: g.title.replace(/ (Supporters|Partners|Sponsors)$/, ""),
-          count: active.filter(function (s) { return g.levels.indexOf(s.level) !== -1; }).length
-        };
+        return { id: g.id, title: g.title.replace(/ (Supporters|Partners|Sponsors)$/, ""), count: membersOf(g).length };
       })).forEach(function (f, i) {
         var b = document.createElement("button");
         b.type = "button";
         b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
-        b.innerHTML = "";
         b.appendChild(document.createTextNode(f.title));
         var c = document.createElement("span");
         c.textContent = "(" + f.count + ")";
