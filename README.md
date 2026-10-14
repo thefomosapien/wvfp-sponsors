@@ -111,10 +111,42 @@ emails the owner. It takes about 10 minutes:
 1. Follow the steps at the top of `integrations/google-apps-script.gs`.
 2. Paste the resulting `/exec` URL into `settings.formEndpoint`.
 
-Each submission adds a row to a **Website Inquiries** tab in the prospect tracker,
-with the status **New Inquiry**, an empty Owner column, and a **Possible duplicate**
-flag when the same email or business has inquired before. It also sends the owner a
-notification email; replying goes straight to the business.
+### What the script does with each submission
+
+1. **Screens bots on the server.** A filled-in hidden honeypot field or a form completed
+   in under 2.5 seconds gets a normal-looking reply, but nothing is stored or emailed.
+2. **Validates everything:** required fields, email format, consent, allowed interest /
+   budget / season values, and length limits (business name 120 characters, message 3,000,
+   and so on). The website's inputs use the same limits.
+3. **Rate-limits:** 3 inquiries per email address per hour, 20 per 10 minutes overall, and
+   80 per day overall. Apps Script can't see visitor IP addresses, so the overall caps
+   protect the Gmail sending quota (100/day on a personal Google account, 1,500 on
+   Google Workspace).
+4. **Writes exactly one row.** Each filled-in form carries a random submission ID, and
+   repeats of an ID (a double-click, a retry after a network blip, or the browser's own
+   automatic re-send) are confirmed without adding a row or sending another email.
+   Rows are written by **header name**, so reordering or adding columns in the tab is safe.
+   The timestamp, the "Interested in" label, and the Status come from the server.
+5. **Emails sponsors@wvfastpitch.org** (the only recipient), with reply-to set to the
+   business. The row's **Email notification** column shows `Sent …`, `FAILED — …`, or
+   `Not sent — daily quota reached`. Failures are also written to an **Integration Log**
+   tab. `retryFailedEmails()` resends them, and `installEmailRetryTrigger()` runs that
+   every hour.
+6. **Replies to the website in JSON.** The site shows its thank-you screen **only** when
+   the reply is `{"ok": true}`. Rejections (invalid fields, rate limit, busy) show a
+   specific message, and an unreadable reply or network failure shows "We couldn't
+   confirm…" with a safe retry.
+
+**Website Inquiries columns:** Submitted · Submission ID · Status · Owner · Interested in ·
+Product key · Season preference · Booking season · Business / organization · Contact name ·
+Email · Phone · Website · Budget range · Message · Possible duplicate · Availability at
+inquiry (internal) · Email notification · Flags · Page
+
+The script only ever writes to **Website Inquiries** and **Integration Log** (creating
+them if needed) and reads **Inventory**. It never touches other tabs.
+
+**Testing the script:** `node tests/apps-script.test.js` runs the real script against
+simulated Apps Script services (48 checks, no dependencies). Run it after any edit.
 
 ## From inquiry to sponsor
 
@@ -163,6 +195,7 @@ released WVFP photography before launch.
 
 - [ ] Board approves pricing, benefits, and terms, then set `pricingStatus: "approved"`
 - [ ] Run `setupInventory()` once and enter current Committed / On hold numbers
+- [ ] Run `installEmailRetryTrigger()` once, so failed notification emails retry hourly
 - [ ] Confirm the public sponsorship email (`contactEmail`, `NOTIFY_EMAILS` in the Apps Script)
 - [ ] Deploy the Apps Script and set `formEndpoint`, then run `docs/launch-qa.md` on the live URL
 - [ ] Verify banner capacity and locations, Snack Shack signage rights, and jersey vendor deadlines
@@ -182,4 +215,5 @@ assets/img/                        # brand logos, favicons
 docs/photography-art-direction.md  # image briefs per placement
 docs/launch-qa.md                  # pre-launch click-through + test inquiry
 integrations/google-apps-script.gs # form -> Sheet + email; private Inventory tab
+tests/                             # node tests/apps-script.test.js (server-side checks)
 ```

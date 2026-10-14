@@ -460,29 +460,29 @@
         <div class="field-row">
           <div class="field">
             <label for="f-org">Business or organization <span class="req" aria-hidden="true">*</span></label>
-            <input id="f-org" name="organization" type="text" autocomplete="organization" required />
+            <input id="f-org" name="organization" type="text" maxlength="120" autocomplete="organization" required />
           </div>
           <div class="field">
             <label for="f-name">Your name <span class="req" aria-hidden="true">*</span></label>
-            <input id="f-name" name="name" type="text" autocomplete="name" required />
+            <input id="f-name" name="name" type="text" maxlength="100" autocomplete="name" required />
           </div>
         </div>
 
         <div class="field-row">
           <div class="field">
             <label for="f-email">Email <span class="req" aria-hidden="true">*</span></label>
-            <input id="f-email" name="email" type="email" autocomplete="email" required />
+            <input id="f-email" name="email" type="email" maxlength="254" autocomplete="email" required />
           </div>
           <div class="field">
             <label for="f-phone">Phone <span class="opt">optional</span></label>
-            <input id="f-phone" name="phone" type="tel" autocomplete="tel" />
+            <input id="f-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" />
           </div>
         </div>
 
         <div class="field-row">
           <div class="field">
             <label for="f-website">Business website <span class="opt">optional</span></label>
-            <input id="f-website" name="website" type="text" inputmode="url" autocomplete="url" placeholder="yourbusiness.com" />
+            <input id="f-website" name="website" type="text" maxlength="200" inputmode="url" autocomplete="url" placeholder="yourbusiness.com" />
           </div>
           <div class="field">
             <label for="f-budget">Budget range <span class="opt">optional</span></label>
@@ -499,7 +499,7 @@
 
         <div class="field">
           <label for="f-message">Anything else we should know? <span class="opt">optional</span></label>
-          <textarea id="f-message" name="message" rows="4" placeholder="Goals for your sponsorship, questions, timing, in-kind ideas…"></textarea>
+          <textarea id="f-message" name="message" rows="4" maxlength="3000" placeholder="Goals for your sponsorship, questions, timing, in-kind ideas…"></textarea>
         </div>
 
         <!-- Spam trap: hidden from people, tempting to bots -->

@@ -332,6 +332,17 @@
     errorBox.hidden = false;
   }
 
+  // One ID per filled-in form. Retries reuse it, so the server never records
+  // the same inquiry twice; "Send another inquiry" starts a new one.
+  var submissionId = newSubmissionId();
+  function newSubmissionId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var a = new Uint8Array(16);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    return Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+  }
+
+  // Display data for the confirmation screen and the email fallback
   function collect() {
     var fd = new FormData(form);
     var out = {};
@@ -342,11 +353,21 @@
     } else {
       delete out.season;
     }
-    out.booking_season = SEASON;
-    out.page = window.location.href.split("#")[0];
-    out.submitted_at = new Date().toISOString();
-    delete out.company_fax;
     return out;
+  }
+
+  // What the server receives. It derives labels and the timestamp itself,
+  // and gets the honeypot and fill time so it can screen bots server-side.
+  function payloadFor(d) {
+    var keys = ["opportunity", "season", "organization", "name", "email", "phone", "website", "budget", "message", "consent", "company_fax"];
+    var p = {};
+    keys.forEach(function (k) { if (d[k] != null) p[k] = d[k]; });
+    p.company_fax = $("#f-company").value; // always sent, normally empty
+    p.submission_id = submissionId;
+    p.booking_season = SEASON;
+    p.elapsed_ms = String(Date.now() - formStarted);
+    p.page = window.location.href.split("#")[0].slice(0, 300);
+    return p;
   }
 
   function mailtoFor(d) {
@@ -396,13 +417,9 @@
 
     var d = collect();
 
-    // Quietly drop obvious bots: honeypot filled, or submitted impossibly fast
-    if ($("#f-company").value || Date.now() - formStarted < 2500) {
-      finish(d, false);
-      return;
-    }
-
+    // No server configured: hand off to the visitor's email app instead
     if (!SETTINGS.formEndpoint) {
+      if ($("#f-company").value || Date.now() - formStarted < 2500) { finish(d, false); return; }
       window.location.href = mailtoFor(d);
       finish(d, true);
       return;
@@ -412,15 +429,16 @@
     submitBtn.setAttribute("aria-busy", "true");
     submitBtn.firstChild.textContent = "Sending… ";
 
-    // URL-encoded POST is a "simple" request — works with Google Apps Script without CORS preflight
-    fetch(SETTINGS.formEndpoint, { method: "POST", body: new URLSearchParams(d) })
-      .then(function (res) {
-        if (res.type !== "opaque" && !res.ok) throw new Error("HTTP " + res.status);
-        finish(d, false);
+    sendInquiry(payloadFor(d))
+      .then(function (result) {
+        if (result && result.ok === true) { finish(d, false); return; }
+        showServerError(result || {}, d);
       })
       .catch(function () {
-        showError("Sorry — something went wrong sending your inquiry. Please try again, or " +
-          "<a href=\"" + mailtoFor(d) + "\">send it by email instead</a>.");
+        // Network failure, timeout, or a reply we couldn't read. Retrying is safe:
+        // the same submission ID means the server won't record it twice.
+        showError("We couldn't confirm that your inquiry was received. Please try again — " +
+          "you won't be submitted twice — or <a href=\"" + mailtoFor(d) + "\">send it by email instead</a>.");
       })
       .then(function () {
         submitBtn.disabled = false;
@@ -429,6 +447,67 @@
       });
   });
 
+  // Google Apps Script web apps answer a POST with a 302 redirect to
+  // script.googleusercontent.com, which serves the JSON reply with
+  // Access-Control-Allow-Origin: *. A default ("cors") fetch follows the
+  // redirect and can read it. Rules that keep this working:
+  //   - form-encoded body and no custom headers (anything else triggers a
+  //     CORS preflight, which Apps Script doesn't answer);
+  //   - never mode: "no-cors" (the reply would be unreadable);
+  //   - success is ONLY {"ok": true} in the body — Apps Script always
+  //     returns HTTP 200, even for rejected submissions.
+  function sendInquiry(payload) {
+    var controller = window.AbortController ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 25000) : null;
+    return fetch(SETTINGS.formEndpoint, {
+      method: "POST",
+      body: new URLSearchParams(payload),
+      redirect: "follow",
+      credentials: "omit",
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        if (timer) clearTimeout(timer);
+        try { return JSON.parse(text); }
+        catch (err) { throw new Error("Unreadable reply"); } // e.g. a Google sign-in page if access isn't "Anyone"
+      }, function (err) {
+        if (timer) clearTimeout(timer);
+        throw err;
+      });
+  }
+
+  var SERVER_FIELDS = {
+    organization: "#f-org", name: "#f-name", email: "#f-email", phone: "#f-phone",
+    website: "#f-website", message: "#f-message", consent: "#f-consent",
+    budget: "#f-budget", opportunity: "#f-opportunity"
+  };
+  function showServerError(result, d) {
+    var email = "<a href=\"" + mailtoFor(d) + "\">" + (SETTINGS.contactEmail || "email us") + "</a>";
+    if (result.error === "invalid") {
+      var first = null;
+      (result.fields || []).forEach(function (f) {
+        var el = SERVER_FIELDS[f] && $(SERVER_FIELDS[f]);
+        if (!el) return;
+        if (f === "opportunity") { pickerOpen = true; updateSelected(); }
+        setInvalid(el, "Please check this field.");
+        first = first || el;
+      });
+      showError(first ? "Please check the highlighted fields." :
+        "Something about this inquiry couldn't be accepted. Please try again, or email us at " + email + ".");
+      if (first) first.focus();
+    } else if (result.error === "rate_limited") {
+      showError("We've received several inquiries in a short time. Please try again a little later, or email us at " + email + ".");
+    } else if (result.error === "busy") {
+      showError("Our system is busy for a moment. Please try again — you won't be submitted twice.");
+    } else {
+      showError("Sorry — something went wrong on our end. Please try again, or email us at " + email + ".");
+    }
+  }
+
   $("#formReset").addEventListener("click", function () {
     var keep = select.value;
     form.reset();
@@ -436,6 +515,7 @@
     pickerOpen = false;
     updateSelected();
     formStarted = Date.now();
+    submissionId = newSubmissionId();
     formDone.hidden = true;
     form.hidden = false;
     $("#f-org").focus();

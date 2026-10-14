@@ -26,10 +26,13 @@ Also check:
 - [ ] The **Become a Sponsor** buttons in the header, closer, and mobile bar don't overwrite a choice you already made.
 
 ## 3. Test inquiry
+First, open the `/exec` URL in a browser. You should see `{"ok":true,"service":"wvfp-sponsorship-inquiries"}`. If you see a Google sign-in page instead, the deployment's access isn't set to **Anyone**.
+
 Submit with a real inbox you can check and a business name like `TEST – delete me`.
 - [ ] The confirmation screen appears.
 - [ ] A new row appears in the tracker's **Website Inquiries** tab with Status **New Inquiry**, the right "Interested in" value, and the booking season.
-- [ ] The owner notification email arrives, and replying goes to the test address.
+- [ ] The owner notification email arrives at sponsors@wvfastpitch.org, replying goes to the test address, and the row's **Email notification** column says `Sent …`.
+- [ ] Double-click **Send my inquiry** on a fresh form. Only one row and one email are created.
 - [ ] Submit the same email again. The new row shows **Possible duplicate**, and the email subject starts with **[Repeat]**.
 - [ ] The owner email includes an **Internal availability** line for the product you picked, matching the Inventory tab.
 - [ ] The test business does **not** appear under "Our Community Partners", and the Inventory tab didn't change.
@@ -37,6 +40,8 @@ Submit with a real inbox you can check and a business name like `TEST – delete
 
 ## 4. Edge cases
 - [ ] Submitting with required fields empty highlights them and doesn't send.
+- [ ] Turn off Wi-Fi and submit. The page says it couldn't confirm the inquiry (no thank-you screen). Turn Wi-Fi back on and press Send again. Exactly one row appears.
+- [ ] The **Integration Log** tab is empty or only shows expected entries.
 - [ ] The form works with the phone keyboard (email/phone keyboards appear, nothing hidden behind the keyboard).
 - [ ] Open a deep link, e.g. `…/sponsors/?opportunity=snack-shack#inquire`. It lands on the form with the Snack Shack selected.
 - [ ] In the Inventory tab, temporarily set one product's Committed equal to its Capacity. The website looks exactly the same and the option can still be chosen. An inquiry for it goes through, and the owner email says "fully committed". Then revert the change.
