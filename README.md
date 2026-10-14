@@ -14,11 +14,11 @@ official logo files.
 
 ## Page sections
 
-1. **Hero:** "Support the girls. Strengthen the game.", two calls to action (Explore Sponsorships · Become a Partner), and one line: "Opportunities starting at $250"
+1. **Hero:** "Support girls softball. Strengthen the game.", two calls to action (Explore Sponsorships · Become a Partner), and one line: "Opportunities starting at $250"
 2. **About WVFP:** the league's story, quick facts, and what sponsorship supports
 3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, exactly three short benefits, and "View details." Variants, comparisons, exclusivity, and full terms open in a modal.
 4. **Community supporters** ("Make a difference with a contribution at any level"): Bronze ("Show your support"), Silver ("Get recognized"), and Gold ("Become a featured supporter") with progressively more visual weight, a pointer back to featured sponsorships for businesses that want advertising, and a "Compare levels & terms" table (expandable per-level comparisons on phones)
-5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind support
+5. **Custom partnerships:** $5,000+, the planned scholarship program, equipment, facilities, and in-kind support
 6. **Our community partners:** a filterable directory generated from the data file, in four tiers (see below)
 7. **Inquiry form:** the clicked interest appears as "Your interest: … · Change", Jersey adds a Spring/Fall choice, and the form includes spam protection and a confirmation screen
 8. **FAQ** and a closing call to action
@@ -96,8 +96,15 @@ Put logo files in `assets/img/sponsors/`. A listing hides itself after its
 `until` date. Bronze sponsors appear as text only, which matches their benefits.
 List a business once, at its highest recognition level.
 
-**Pricing status.** `pricingStatus: "proposed"` shows a gold notice saying the
-program is pending board approval. Change it to `"approved"` after the
+**Seasonal promo bar.** The gold bar under the hero promotes the Spring 2027 season
+(`#promoBar` in `index.html`). It manages its own dates: the "sponsor before December 31"
+tax line hides after 2026-12-31 and is replaced by a "part of it from opening day" line,
+and the whole bar disappears after 2027-05-31 (`data-until`). For a new season, edit the
+text and dates in that block. The tax line deliberately says contributions *may* count and
+points to a tax advisor; confirm WVFP's federal tax status before promising more.
+
+**Pricing status.** `pricingStatus: "proposed"` shows a small note under the Featured
+Sponsorships heading saying pricing is pending board approval. Change it to `"approved"` after the
 board votes and the notice disappears.
 
 ## Inquiry form setup

@@ -96,9 +96,20 @@
 
   /* ---------- Settings: pricing status, contact email ---------- */
   if (SETTINGS.pricingStatus === "approved") {
-    var bar = $("#statusBar");
-    if (bar) bar.remove();
+    var note = $("#pricingNote");
+    if (note) note.remove();
   }
+
+  /* ---------- Seasonal promo bar: date-limited pieces hide themselves ---------- */
+  var todayISO = new Date().toISOString().slice(0, 10);
+  $$("#promoBar [data-until], #promoBar[data-until]").forEach(function (el) {
+    if (todayISO > el.getAttribute("data-until")) {
+      if (el.id === "promoBar") el.remove(); else el.hidden = true;
+    }
+  });
+  $$("#promoBar [data-from]").forEach(function (el) {
+    el.hidden = todayISO < el.getAttribute("data-from");
+  });
   if (SETTINGS.contactEmail) {
     $$(".js-contact-email").forEach(function (a) {
       a.href = "mailto:" + SETTINGS.contactEmail;
