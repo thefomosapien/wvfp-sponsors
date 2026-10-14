@@ -1,6 +1,6 @@
 /* ============================================================
    West Valley Fast Pitch — Sponsorships
-   Nav, option dialogs, availability from the inventory record,
+   Nav, option dialogs,
    form prefill + submission, and the partner directory.
    No dependencies. Data lives in sponsorship-data.js (window.WVFP).
    ============================================================ */
@@ -12,7 +12,7 @@
 
   var DATA = window.WVFP || { settings: {}, inventory: {}, sponsors: [] };
   var SETTINGS = DATA.settings || {};
-  var INVENTORY = DATA.inventory || {};
+  // The season being sold is attached to each inquiry for the tracker; it is never displayed
   var SEASON = SETTINGS.bookingSeason ? String(SETTINGS.bookingSeason) : "";
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var params = new URLSearchParams(window.location.search);
@@ -94,7 +94,7 @@
   }
   onScroll();
 
-  /* ---------- Settings: pricing status, contact email, booking season ---------- */
+  /* ---------- Settings: pricing status, contact email ---------- */
   if (SETTINGS.pricingStatus === "approved") {
     var bar = $("#statusBar");
     if (bar) bar.remove();
@@ -105,77 +105,6 @@
       a.textContent = SETTINGS.contactEmail;
     });
   }
-  if (SEASON) {
-    $$(".js-booking").forEach(function (el) { el.textContent = "Now booking the " + SEASON + " season."; });
-  }
-
-  /* ============================================================
-     AVAILABILITY — computed from the inventory record
-     ============================================================ */
-  // Category keys used by cards and the form map to their variants
-  var GROUPS = {
-    field: ["shared-banner", "dedicated-banner"],
-    jersey: ["jersey-spring", "jersey-fall"],
-    digital: ["website", "digital-feature"]
-  };
-
-  function availability(key) {
-    var item = INVENTORY[key];
-    if (!item) return null;
-    if (item.open === false) return { state: "out", label: "Not currently available", soldOut: true, left: 0 };
-    if (item.capacity == null) return { state: "ok", label: "Open to all", soldOut: false };
-    var left = Math.max(0, item.capacity - (item.sold || 0) - (item.held || 0));
-    var per = item.per ? " " + item.per : "";
-    var when = SEASON ? " for " + SEASON : "";
-    if (left === 0) return { state: "out", label: "Sold out" + when, soldOut: true, left: 0 };
-    if (item.capacity === 1) return { state: "ok", label: "Available" + when, soldOut: false, left: 1 };
-    var low = left <= Math.max(1, Math.floor(item.capacity / 4));
-    return {
-      state: low ? "low" : "ok",
-      label: (low ? "Only " + left + " left" : left + " of " + item.capacity + " available") + per + when,
-      soldOut: false,
-      left: left
-    };
-  }
-
-  function shortName(key) {
-    var n = (INVENTORY[key] && INVENTORY[key].name) || key;
-    return n.replace(/ (Sponsorship|Sponsor)$/, "").replace(/^Official /, "");
-  }
-
-  // Dialog option cards
-  $$("[data-product]").forEach(function (el) {
-    var key = el.getAttribute("data-product");
-    var a = availability(key);
-    if (!a) return;
-    var avail = $(".choice__avail", el);
-    if (avail) { avail.textContent = a.label; avail.setAttribute("data-state", a.state); }
-    if (a.soldOut) {
-      el.classList.add("is-soldout");
-      $$("[data-select='" + key + "']", el).forEach(function (btn) { btn.textContent = "Join the waitlist"; });
-    }
-  });
-
-  // Category cards: only speak up when availability is notable
-  $$("[data-category]").forEach(function (card) {
-    var keys = card.getAttribute("data-category").split(" ");
-    var states = keys.map(function (k) { return { key: k, a: availability(k) }; }).filter(function (s) { return s.a; });
-    var out = states.filter(function (s) { return s.a.soldOut; });
-    var low = states.filter(function (s) { return s.a.state === "low"; });
-    var el = $(".cat__avail", card);
-    if (!el || !states.length) return;
-    var msg = "";
-    if (out.length === states.length) {
-      msg = "Currently sold out" + (SEASON ? " for " + SEASON : "") + " — join the waitlist";
-      el.setAttribute("data-state", "out");
-    } else if (out.length) {
-      msg = out.map(function (s) { return shortName(s.key); }).join(" & ") + " sold out — other options available";
-    } else if (low.length) {
-      msg = "Limited availability" + (SEASON ? " for " + SEASON : "");
-    }
-    if (msg) { el.textContent = msg; el.hidden = false; }
-  });
-
   /* ---------- Community levels: expandable comparisons for small screens ---------- */
   var tierTable = $(".compare--tiers table");
   if (tierTable) {
@@ -280,39 +209,18 @@
   var oppField = $("#opportunityField");
   // While someone is actively choosing from the dropdown, keep it open
   var pickerOpen = false;
-  var availHint = $("#availHint");
   var formCard = $(".form-card");
   var formDone = $("#formDone");
   var errorBox = $("#formError");
   var submitBtn = $("#submitBtn");
   var formStarted = Date.now();
 
-  // Mark sold-out variants so nobody thinks they're reserving one
-  $$("option", select).forEach(function (opt) {
-    var a = availability(opt.value);
-    if (a && a.soldOut) opt.textContent = opt.textContent + " — sold out (waitlist)";
-  });
-  // Season choices for jersey
-  $$("input[name='season']", seasonField).forEach(function (r) {
-    var a = availability("jersey-" + r.value);
-    if (a && a.soldOut) {
-      r.disabled = true;
-      r.parentNode.title = a.label;
-      var em = $("em", r.parentNode);
-      if (em) em.textContent = "Sold out";
-    }
-  });
-
   function cleanLabel(text) {
-    return text.replace(/^\s+/, "").replace(/ — sold out \(waitlist\)$/, "");
+    return text.replace(/^\s+/, "");
   }
   function optionLabel(value) {
     var opt = $("option[value='" + value + "']", select);
     return opt ? cleanLabel(opt.textContent) : value;
-  }
-  function seasonValue() {
-    var r = $("input[name='season']:checked", seasonField);
-    return r ? r.value : "either";
   }
 
   function updateSelected() {
@@ -327,24 +235,6 @@
       interestPrice.textContent = parts.slice(1).join(" — ");
     }
     seasonField.hidden = v !== "jersey";
-
-    availHint.removeAttribute("data-state");
-    var keys = GROUPS[v] || (INVENTORY[v] ? [v] : []);
-    if (v === "jersey" && seasonValue() !== "either") keys = ["jersey-" + seasonValue()];
-    var info = keys.map(function (k) { return { k: k, a: availability(k) }; })
-      .filter(function (x) { return x.a && x.a.left != null; });
-    if (!info.length) { availHint.textContent = ""; return; }
-
-    if (info.every(function (x) { return x.a.soldOut; })) {
-      availHint.textContent = "Currently spoken for — we'll add you to the waitlist and suggest similar options.";
-      availHint.setAttribute("data-state", "out");
-      return;
-    }
-    var parts = info.map(function (x) {
-      return shortName(x.k) + ": " + x.a.label.replace(/ for \d{4}$/, "").toLowerCase();
-    }).join(" · ");
-    availHint.textContent = (SEASON ? "Now booking " + SEASON + ". " : "") + parts +
-      ". An inquiry doesn't reserve a spot — WVFP confirms in writing.";
   }
 
   function preselect(value) {
@@ -362,7 +252,7 @@
     }
     if (season) {
       var r = $("input[name='season'][value='" + season + "']", seasonField);
-      if (r && !r.disabled) r.checked = true;
+      if (r) r.checked = true;
     }
     updateSelected();
   }
@@ -373,7 +263,6 @@
     updateSelected();
     select.focus();
   });
-  seasonField.addEventListener("change", updateSelected);
 
   document.addEventListener("click", function (e) {
     var trigger = e.target.closest("[data-select]");

@@ -16,7 +16,7 @@ official logo files.
 
 1. **Hero:** "Support the girls. Strengthen the game.", two calls to action (Explore Sponsorships · Become a Partner), and one line: "Opportunities starting at $250"
 2. **About WVFP:** the league's story, quick facts, and what sponsorship supports
-3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, exactly three short benefits, and "View details." Variants, comparisons, availability, and full terms open in a modal.
+3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, exactly three short benefits, and "View details." Variants, comparisons, exclusivity, and full terms open in a modal.
 4. **Community supporters** ("Make a difference with a contribution at any level"): Bronze ("Show your support"), Silver ("Get recognized"), and Gold ("Become a featured supporter") with progressively more visual weight, a pointer back to featured sponsorships for businesses that want advertising, and a "Compare levels & terms" table (expandable per-level comparisons on phones)
 5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind support
 6. **Our community partners:** a filterable directory generated from the data file, in four tiers (see below)
@@ -25,11 +25,34 @@ official logo files.
 
 ## Evergreen by design
 
-The page sells WVFP as a long-standing community partner, not a single season. The only
-year on the page comes from `settings.bookingSeason` in the data file, and it appears only
-where it matters operationally: availability inside the option modals ("Now booking
-the 2027 season"), availability hints in the form, and every inquiry submission. To roll
-over to a new year, update `bookingSeason` and reset the inventory counts.
+The page sells WVFP as a long-standing community partner, not a single season. No year
+appears on the page. `settings.bookingSeason` in the data file is never displayed; it's
+attached to each inquiry so the tracker knows which season the business is asking about.
+To roll over to a new year, update `bookingSeason` and add the new season's rows to the
+Inventory tab.
+
+## Inventory is private
+
+The public page never shows counts, open slots, or sold-out states, and every option can
+always be selected, so businesses can always express interest. The form says plainly that
+an inquiry doesn't reserve a sponsorship or guarantee availability. Exclusivity and general
+limits (one jersey sponsor per season, up to four website sponsors, and so on) stay
+visible as terms, not as live counts.
+
+Inventory lives only in the **Inventory** tab of the Sponsorship Prospect Tracker:
+
+| Product key | Product | Price | Season | Capacity | Committed | On hold | Remaining | Open for inquiries? | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+`setupInventory()` in the Apps Script creates the tab once, seeded with all ten products.
+Leave Capacity blank for unlimited community levels. "Remaining" is a formula. Set "Open
+for inquiries?" to `No` to mark something paused internally (the website is unaffected).
+
+When an inquiry arrives, the script **reads** that tab and adds a private snapshot to the
+owner email and the inquiry row, for example *"Internal availability (not shown on the
+website): Spring Jersey Sponsorship 2027: fully committed (0 of 1)"*. That way whoever replies
+knows whether to offer the placement, an alternative, or a spot on a waitlist. The script
+never changes the Inventory tab.
 
 ## Running locally
 
@@ -41,16 +64,7 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 
 ## Day-to-day updates: `assets/js/sponsorship-data.js`
 
-Most changes only need this one file.
-
-**Inventory.** When a sponsorship is accepted and paid, increase `sold` for that
-product. Use `held` for renewal holds and pending agreements. The page then works
-out availability on its own ("12 of 12 available", then "Only 2 left", then
-"Sold out"). Once an opportunity is sold out, its button changes to "Join the
-waitlist", so it is never shown as available. Set `open: false` to pause an
-offer (for example, after the jersey vendor's print deadline passes). Keep these
-numbers in sync with the **WVFP Sponsorship Prospect Tracker**, which remains the
-source of truth.
+Most website changes only need this one file. (Inventory is not in it; see above.)
 
 **Sponsors.** Add confirmed partners only, meaning signed and paid:
 
@@ -104,17 +118,16 @@ notification email; replying goes straight to the business.
 
 ## From inquiry to sponsor
 
-An inquiry is a **lead, not a sponsor**. The website never counts it toward
-inventory or revenue and never lists it publicly. A business moves through the
-tracker by hand:
+An inquiry is a **lead, not a sponsor**. It never counts toward inventory or revenue
+and is never listed publicly. A business moves through the tracker by hand:
 
-| Status | What happens | Website change |
-| --- | --- | --- |
-| New Inquiry | Arrives from the form | None |
-| Contacted → Offer Sent | Owner confirms real availability and sends written terms | Optionally add to `held` to protect a scarce slot |
-| Accepted → Paid / Received | WVFP accepts in writing; payment or in-kind contribution confirmed | Move the slot from `held` to `sold` |
-| Active Sponsor | Artwork received, placement activated | Add the business to `sponsors` |
-| Declined / Not a Fit / Waitlist | Closed or parked | Release any `held` slot |
+| Status | What happens | Inventory tab | Website |
+| --- | --- | --- | --- |
+| New Inquiry | Arrives from the form | — | — |
+| Contacted → Offer Sent | Owner checks the Inventory tab and sends written terms | Optionally add 1 to **On hold** for a scarce slot | — |
+| Accepted → Paid / Received | WVFP accepts in writing; payment or in-kind contribution confirmed | Move 1 from **On hold** to **Committed** | — |
+| Active Sponsor | Artwork received, placement activated | — | Add the business to `sponsors` |
+| Declined / Not a Fit / Waitlist | Closed or parked | Release any **On hold** | — |
 
 Only **Active Sponsor** businesses belong in the public directory.
 
@@ -149,6 +162,7 @@ released WVFP photography before launch.
 ## Before launch
 
 - [ ] Board approves pricing, benefits, and terms, then set `pricingStatus: "approved"`
+- [ ] Run `setupInventory()` once and enter current Committed / On hold numbers
 - [ ] Confirm the public sponsorship email (`contactEmail`, `NOTIFY_EMAILS` in the Apps Script)
 - [ ] Deploy the Apps Script and set `formEndpoint`, then run `docs/launch-qa.md` on the live URL
 - [ ] Verify banner capacity and locations, Snack Shack signage rights, and jersey vendor deadlines
@@ -161,11 +175,11 @@ released WVFP photography before launch.
 ```
 index.html                         # all page content
 assets/css/styles.css              # brand tokens + layout
-assets/js/sponsorship-data.js      # settings, inventory, sponsors (edit this)
-assets/js/main.js                  # availability, form, directory, nav
+assets/js/sponsorship-data.js      # settings + confirmed sponsors (edit this; public, no inventory)
+assets/js/main.js                  # dialogs, form, directory, nav
 assets/img/photos/                 # one file per photo placement
 assets/img/                        # brand logos, favicons
 docs/photography-art-direction.md  # image briefs per placement
 docs/launch-qa.md                  # pre-launch click-through + test inquiry
-integrations/google-apps-script.gs # form -> Google Sheet + email
+integrations/google-apps-script.gs # form -> Sheet + email; private Inventory tab
 ```

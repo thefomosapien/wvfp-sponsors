@@ -271,10 +271,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 .cat .checks { gap: .7rem; margin-bottom: 1.4rem; }
 .cat .checks li { font-size: 1.02rem; font-weight: 700; color: var(--ink); }
 .cat__actions { margin-top: auto !important; }
-.cat__avail { margin: 0 0 1rem; font-size: .84rem; font-weight: 900; color: var(--deep-red); }
-.cat__avail::before { content: ""; display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: var(--gold); margin-right: .45rem; vertical-align: .05em; }
-.cat__avail[data-state="out"] { color: var(--ink-soft); }
-.cat__avail[data-state="out"]::before { background: var(--ink-soft); }
 .cat__actions { display: flex; align-items: center; gap: 1.2rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
 .cat__actions .btn { flex: 1; }
 .cat__inquire { font-weight: 900; font-size: .84rem; letter-spacing: .04em; text-transform: uppercase; color: var(--deep-red); text-decoration: none; white-space: nowrap; }
@@ -349,7 +345,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 .dlg__head { position: relative; padding-right: 3rem; margin-bottom: 1.4rem; }
 .dlg__head h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); margin-bottom: .5rem; }
 .dlg__head p:last-of-type { color: var(--ink-soft); margin: 0; }
-.js-booking { font-weight: 700; color: var(--deep-red); }
 .dlg__close { position: absolute; top: -.3rem; right: -.3rem; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 1px solid var(--line-strong); background: #fff; color: var(--deep-red); font-size: 1.5rem; line-height: 1; cursor: pointer; }
 .dlg__close:hover { background: var(--red); color: var(--cream); border-color: var(--red); }
 
@@ -359,18 +354,11 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 .choice h3 { font-size: 1.2rem; color: var(--ink); }
 .choice__price { font-family: var(--f-display); font-weight: 900; font-size: 1.9rem; color: var(--red); line-height: 1; margin: 0; }
 .choice__price small { font-family: var(--f-body); font-size: .82rem; font-weight: 700; color: var(--ink-soft); }
-.choice__avail { margin: 0; font-size: .86rem; font-weight: 900; color: var(--teal); }
-.choice__avail::before { content: ""; display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; margin-right: .4rem; vertical-align: .05em; }
-.choice__avail:empty { display: none; }
-.choice__avail[data-state="low"] { color: var(--deep-red); }
-.choice__avail[data-state="out"] { color: var(--ink-soft); }
 .choice__best { margin: 0; font-size: .9rem; color: var(--ink-soft); font-style: italic; }
 .choice__fine { margin: 0; font-size: .82rem; color: var(--ink-soft); }
 .choice .checks { flex: 1; }
 .choice .btn { margin-top: auto; }
 .choices--single .choice .btn { align-self: flex-start; }
-.choice.is-soldout .choice__price { color: var(--ink-soft); opacity: .6; }
-.choice.is-soldout .btn { background: transparent; color: var(--deep-red); border-color: var(--deep-red); box-shadow: none; }
 
 .dlg__cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.6rem; margin-bottom: 1.2rem; }
 .dlg__cols p:not(.cat__label) { color: var(--ink-soft); font-size: .95rem; }
@@ -559,7 +547,7 @@ a.dir-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .interest__change { flex: none; cursor: pointer; font-family: var(--f-body); font-weight: 900; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--deep-red); background: none; border: 1.5px solid var(--line-strong); border-radius: 999px; padding: .5rem 1rem; }
 .interest__change:hover { border-color: var(--red); background: var(--paper); }
 .field[hidden] { display: none; }
-.field__hint--avail { margin: -.4rem 0 1rem; }
+.form-note { font-size: .84rem; color: var(--ink-soft); margin: -.3rem 0 1rem; padding-left: .8rem; border-left: 3px solid var(--gold); line-height: 1.45; }
 .form-intro { font-size: .95rem; color: var(--ink-soft); margin: .2rem 0 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 
 .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1.05rem; min-width: 0; }

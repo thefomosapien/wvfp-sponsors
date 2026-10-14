@@ -8,8 +8,16 @@
  *      has inquired before), and
  *   2. emailed to the sponsorship owner(s).
  *
- * An inquiry is a LEAD, not a sponsor. This script never changes
- * inventory, revenue, or the public partner directory. A business
+ * Sponsorship INVENTORY is private and lives in this Sheet, in an
+ * "Inventory" tab (run setupInventory() once to create it). The public
+ * website never shows counts or sold-out states. Each inquiry email
+ * includes an internal availability snapshot for the product asked
+ * about, read from that tab, so the owner knows what's open before
+ * replying.
+ *
+ * An inquiry is a LEAD, not a sponsor. This script only READS the
+ * Inventory tab — it never changes inventory, revenue, or the public
+ * partner directory. A business
  * becomes a sponsor only after WVFP accepts it in writing and the
  * payment or in-kind contribution is confirmed — then an owner
  * updates the tracker and the website data file by hand.
@@ -17,7 +25,8 @@
  * SETUP (about 10 minutes, once):
  *   1. Open the WVFP Sponsorship Prospect Tracker in Google Sheets.
  *   2. Extensions → Apps Script. Paste this whole file in, replacing Code.gs.
- *   3. Edit NOTIFY_EMAILS below.
+ *   3. Edit NOTIFY_EMAILS below. Then choose setupInventory in the function
+ *      menu and click Run once — it creates the "Inventory" tab.
  *   4. Deploy → New deployment → type "Web app".
  *        Execute as: Me   ·   Who has access: Anyone
  *      Authorize when asked.
@@ -32,6 +41,31 @@
 var NOTIFY_EMAILS = "sponsors@wvfastpitch.org"; // comma-separate multiple addresses
 var SHEET_NAME = "Website Inquiries";
 var STATUS_NEW = "New Inquiry";
+var INVENTORY_SHEET = "Inventory";
+
+// Starting inventory for setupInventory(). After setup, edit the Sheet,
+// not this list. Leave Capacity blank for unlimited (community levels).
+var INVENTORY_SEED = [
+  // key,               product,                          price, capacity
+  ["shared-banner",    "Shared Field Banner",             350,   12],
+  ["dedicated-banner", "Dedicated Field Banner",          750,   12],
+  ["jersey-spring",    "Spring Jersey Sponsorship",       4500,  1],
+  ["jersey-fall",      "Fall Jersey Sponsorship",         2500,  1],
+  ["snack-shack",      "Snack Shack Presenting Sponsor",  2500,  1],
+  ["website",          "Official Website Sponsor",        1500,  4],
+  ["digital-feature",  "Digital Feature (per season)",    300,   6],
+  ["bronze",           "Bronze Community Supporter",      250,   ""],
+  ["silver",           "Silver Community Supporter",      500,   ""],
+  ["gold",             "Gold Community Supporter",        1000,  ""]
+];
+var INVENTORY_HEADERS = ["Product key", "Product", "Price", "Season", "Capacity", "Committed", "On hold", "Remaining", "Open for inquiries?", "Notes"];
+
+// Form interest keys that cover more than one product
+var INTEREST_GROUPS = {
+  "field": ["shared-banner", "dedicated-banner"],
+  "jersey": ["jersey-spring", "jersey-fall"],
+  "digital": ["website", "digital-feature"]
+};
 // Suggested pipeline for the Status column:
 // New Inquiry → Contacted → Offer Sent → Accepted → Paid / Received → Active Sponsor
 // (or Declined / Not a Fit / Waitlist). Only "Active Sponsor" belongs on the website.
@@ -60,6 +94,7 @@ function doPost(e) {
   }
 
   var duplicateNote = "";
+  var inventorySnapshot = describeAvailability(p.opportunity, p.season, p.booking_season);
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -69,6 +104,7 @@ function doPost(e) {
     row.push(STATUS_NEW);   // Status — owner moves it along the pipeline
     row.push("");           // Owner
     row.push(duplicateNote); // Possible duplicate
+    row.push(inventorySnapshot); // Internal availability at the time of inquiry
     sheet.appendRow(row);
   } finally {
     lock.releaseLock();
@@ -77,6 +113,7 @@ function doPost(e) {
   var subject = (duplicateNote ? "[Repeat] " : "") + "New sponsorship inquiry — " + clean(p.organization) + " (" + clean(p.opportunity_label) + ")";
   var body = COLUMNS.map(function (c) { return c[1] + ": " + clean(p[c[0]]); }).join("\n") +
     (duplicateNote ? "\n\n" + duplicateNote + "." : "") +
+    (inventorySnapshot ? "\n\nInternal availability (not shown on the website): " + inventorySnapshot : "") +
     "\n\nStatus: " + STATUS_NEW + ". This is a lead, not a sponsor: it does not reserve inventory or count toward revenue." +
     "\nVerify availability in the tracker before replying.";
 
@@ -95,12 +132,65 @@ function getSheet() {
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    var headers = COLUMNS.map(function (c) { return c[1]; }).concat(["Status", "Owner", "Possible duplicate"]);
+    var headers = COLUMNS.map(function (c) { return c[1]; }).concat(["Status", "Owner", "Possible duplicate", "Availability at inquiry (internal)"]);
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
   }
   return sheet;
+}
+
+/* ------------------------------------------------------------
+   INVENTORY (private)
+   ------------------------------------------------------------ */
+
+// Run once from the Apps Script editor to create the Inventory tab.
+// Safe to re-run: it won't overwrite an existing tab.
+function setupInventory() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss.getSheetByName(INVENTORY_SHEET)) return "Inventory tab already exists — edit it directly.";
+  var sh = ss.insertSheet(INVENTORY_SHEET);
+  sh.appendRow(INVENTORY_HEADERS);
+  var season = new Date().getFullYear() + 1;
+  INVENTORY_SEED.forEach(function (r, i) {
+    var n = i + 2;
+    sh.appendRow([r[0], r[1], r[2], season, r[3], 0, 0,
+      '=IF(E' + n + '="","Unlimited",MAX(0,E' + n + '-F' + n + '-G' + n + '))', "Yes", ""]);
+  });
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, INVENTORY_HEADERS.length).setFontWeight("bold");
+  return "Inventory tab created.";
+}
+
+// Read-only: summarize availability for the product(s) a visitor asked about
+function describeAvailability(interest, season, bookingSeason) {
+  var keys = INTEREST_GROUPS[interest] || [interest];
+  if (interest === "jersey" && (season === "spring" || season === "fall")) keys = ["jersey-" + season];
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(INVENTORY_SHEET);
+  if (!sh || !interest) return "";
+  var rows = sh.getDataRange().getValues();
+  var h = rows[0];
+  var col = function (name) { return h.indexOf(name); };
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    if (keys.indexOf(String(r[col("Product key")])) === -1) continue;
+    // Prefer the row for the season being booked when the tab tracks several seasons
+    var rowSeason = String(r[col("Season")] || "");
+    if (bookingSeason && rowSeason && rowSeason !== String(bookingSeason)) continue;
+    var name = r[col("Product")];
+    var open = String(r[col("Open for inquiries?")] || "Yes").toLowerCase() !== "no";
+    var cap = r[col("Capacity")];
+    var text;
+    if (!open) text = "paused";
+    else if (cap === "" || cap === null) text = "unlimited";
+    else {
+      var left = Math.max(0, Number(cap) - Number(r[col("Committed")] || 0) - Number(r[col("On hold")] || 0));
+      text = left === 0 ? "fully committed (0 of " + cap + ")" : left + " of " + cap + " remaining";
+    }
+    out.push(name + (rowSeason ? " " + rowSeason : "") + ": " + text);
+  }
+  return out.join("; ");
 }
 
 // Flag a repeat contact (same email or business name) so the owner can
