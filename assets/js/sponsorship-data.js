@@ -48,17 +48,22 @@ window.WVFP = {
     "jersey-fall":      { name: "Fall Jersey Sponsorship",        price: 2500, capacity: 1,    sold: 0, held: 0, open: true },
     "snack-shack":      { name: "Snack Shack Presenting Sponsor", price: 2500, capacity: 1,    sold: 0, held: 0, open: true },
     "website":          { name: "Official Website Sponsor",       price: 1500, capacity: 4,    sold: 0, held: 0, open: true },
-    "digital-feature":  { name: "Digital Feature Sponsor",        price: 300,  capacity: 6,    sold: 0, held: 0, open: true, per: "this season" },
+    "digital-feature":  { name: "Digital Feature Sponsor",        price: 300,  capacity: 6,    sold: 0, held: 0, open: true },
     "bronze":           { name: "Bronze Community Supporter",     price: 250,  capacity: null, sold: 0, held: 0, open: true },
     "silver":           { name: "Silver Community Supporter",     price: 500,  capacity: null, sold: 0, held: 0, open: true },
     "gold":             { name: "Gold Community Supporter",       price: 1000, capacity: null, sold: 0, held: 0, open: true }
   },
 
   /* ----------------------------------------------------------
-     SPONSORS — confirmed partners only (signed + paid).
+     SPONSORS — confirmed partners only (accepted in writing + paid
+     or in-kind received). Website inquiries NEVER go here
+     automatically — add a business only after it converts.
      level: "partner" (major/custom), "website", "jersey",
             "snack-shack", "gold", "silver", "bronze",
-            "field", "digital", "in-kind"
+            "field", "digital", "in-kind",
+            "past" (verified historical supporter — shown as text
+                    under "Thank You to Past Supporters"; add
+                    years: "1998–2012" if known)
      logo:  path under assets/img/sponsors/ (optional — Bronze is text only)
      url:   business website (optional)
      until: last day of recognition, YYYY-MM-DD — listings hide
@@ -68,6 +73,7 @@ window.WVFP = {
      { name: "Example Plumbing Co.", level: "gold",
        logo: "assets/img/sponsors/example-plumbing.png",
        url: "https://example.com", until: "2027-12-31" },
+     { name: "Longtime Hardware", level: "past", years: "1985–2010" },
      ---------------------------------------------------------- */
   sponsors: [
   ]

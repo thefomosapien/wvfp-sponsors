@@ -1,0 +1,47 @@
+# Launch QA: Sponsorship Page
+
+Run this on the **live URL** after the Apps Script is deployed and `formEndpoint` is set.
+It takes about 15 minutes. Do it once on a phone and once on a computer.
+
+Most of these checks are also covered by an automated browser test during development.
+This list is for the parts only a real deployment can prove: the real Sheet, the real
+inbox, and real devices.
+
+## 1. First impression (on a phone, 20 seconds)
+- [ ] Without scrolling far, can you tell you can either **advertise** or **support the league**, and where to click next?
+- [ ] "Opportunities starting at $250" is visible under the hero buttons.
+- [ ] After you scroll past the hero, the gold **Become a Sponsor** button appears at the bottom. It hides when the form is on screen.
+
+## 2. Every option
+For each card (Field, Jersey, Snack Shack, Digital):
+- [ ] The card shows a price, a duration label, and three benefits.
+- [ ] **View options** opens the details. Availability shows "Now booking the [year] season."
+- [ ] **Full terms** expands.
+- [ ] Each **Inquire about…** button closes the details, scrolls to the form, and shows the right selection under "You're asking about".
+- [ ] For Jersey, the Spring/Fall choice matches the button you clicked.
+- [ ] The card's own **Inquire →** link preselects the category.
+
+Also check:
+- [ ] Bronze, Silver, Gold, and **Discuss a Custom Partnership** each preselect correctly.
+- [ ] The **Become a Sponsor** buttons in the header, closer, and mobile bar don't overwrite a choice you already made.
+
+## 3. Test inquiry
+Submit with a real inbox you can check and a business name like `TEST – delete me`.
+- [ ] The confirmation screen appears.
+- [ ] A new row appears in the tracker's **Website Inquiries** tab with Status **New Inquiry**, the right "Interested in" value, and the booking season.
+- [ ] The owner notification email arrives, and replying goes to the test address.
+- [ ] Submit the same email again. The new row shows **Possible duplicate**, and the email subject starts with **[Repeat]**.
+- [ ] The test business does **not** appear under "Our Community Partners", and no availability count changed.
+- [ ] Delete the test rows.
+
+## 4. Edge cases
+- [ ] Submitting with required fields empty highlights them and doesn't send.
+- [ ] The form works with the phone keyboard (email/phone keyboards appear, nothing hidden behind the keyboard).
+- [ ] Open a deep link, e.g. `…/sponsors/?opportunity=snack-shack#inquire`. It lands on the form with the Snack Shack selected.
+- [ ] Temporarily set one product's `sold` to its capacity. Its option shows **Sold out**, its button says **Join the waitlist**, and the card shows a sold-out note. Then revert the change.
+
+## 5. Content sign-off
+- [ ] Prices, benefits, and terms match the board-approved program. Then set `pricingStatus: "approved"`.
+- [ ] Contact email is correct in the page and the Apps Script.
+- [ ] Photos are real WVFP images with releases on file (see `photography-art-direction.md`).
+- [ ] Any past supporters listed have been verified.

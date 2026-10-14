@@ -14,12 +14,12 @@ official logo files.
 
 ## Page sections
 
-1. **Hero:** "Support the girls. Strengthen the game." plus a two-path chooser (Featured Sponsorships / Community Supporter, with Custom as a third option)
+1. **Hero:** "Support the girls. Strengthen the game.", two calls to action (Explore Sponsorships · Become a Partner), and one line: "Opportunities starting at $250"
 2. **About WVFP:** the league's story, quick facts, and what sponsorship supports
-3. **Featured sponsorships:** four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, term, three benefits, and "View options." Variants, comparisons, availability, and full terms open in a modal.
-4. **Community supporters:** Bronze, Silver, and Gold as lighter typographic cards, with a "Compare levels & terms" disclosure
+3. **Featured sponsorships** ("Promote your business while supporting girls softball"): four category cards (Field, Jersey, Snack Shack, Digital), each with the same structure: starting price, duration label, three benefits, and "View options." Variants, comparisons, availability, and full terms open in a modal.
+4. **Community supporters** ("Make a difference with a contribution at any level"): Bronze, Silver, and Gold as lighter typographic cards, a pointer back to featured sponsorships for businesses that want advertising, and a "Compare levels & terms" disclosure
 5. **Custom partnerships:** $5,000+, scholarships, equipment, facilities, and in-kind support
-6. **Our community partners:** a filterable directory generated from the data file
+6. **Our community partners:** a filterable directory generated from the data file, with optional verified past supporters
 7. **Inquiry form:** the clicked interest is preselected, Jersey adds a Spring/Fall choice, and the form includes spam protection and a confirmation screen
 8. **FAQ** and a closing call to action
 
@@ -60,6 +60,11 @@ source of truth.
   url: "https://example.com", until: "2027-12-31" }
 ```
 
+Verified historical supporters can be listed with `level: "past"` (and optional
+`years: "1985–2010"`). They appear as text under "Thank You to Past Supporters." Until
+there is at least one current partner, the "Become one of our community partners"
+invitation stays visible.
+
 Put logo files in `assets/img/sponsors/`. A listing hides itself after its
 `until` date. Bronze sponsors appear as text only, which matches their benefits.
 List a business once, at its highest recognition level.
@@ -79,8 +84,29 @@ emails the owner. It takes about 10 minutes:
 1. Follow the steps at the top of `integrations/google-apps-script.gs`.
 2. Paste the resulting `/exec` URL into `settings.formEndpoint`.
 
-Each submission adds a row to a **Website Inquiries** tab, with Status and Owner
-columns for follow-up, and sends a notification email that you can reply to.
+Each submission adds a row to a **Website Inquiries** tab in the prospect tracker,
+with the status **New Inquiry**, an empty Owner column, and a **Possible duplicate**
+flag when the same email or business has inquired before. It also sends the owner a
+notification email; replying goes straight to the business.
+
+## From inquiry to sponsor
+
+An inquiry is a **lead, not a sponsor**. The website never counts it toward
+inventory or revenue and never lists it publicly. A business moves through the
+tracker by hand:
+
+| Status | What happens | Website change |
+| --- | --- | --- |
+| New Inquiry | Arrives from the form | None |
+| Contacted → Offer Sent | Owner confirms real availability and sends written terms | Optionally add to `held` to protect a scarce slot |
+| Accepted → Paid / Received | WVFP accepts in writing; payment or in-kind contribution confirmed | Move the slot from `held` to `sold` |
+| Active Sponsor | Artwork received, placement activated | Add the business to `sponsors` |
+| Declined / Not a Fit / Waitlist | Closed or parked | Release any `held` slot |
+
+Only **Active Sponsor** businesses belong in the public directory.
+
+`docs/launch-qa.md` has the click-through and test-inquiry checklist to run after
+deploying.
 
 ## Linking to a specific opportunity
 
@@ -111,11 +137,11 @@ released WVFP photography before launch.
 
 - [ ] Board approves pricing, benefits, and terms, then set `pricingStatus: "approved"`
 - [ ] Confirm the public sponsorship email (`contactEmail`, `NOTIFY_EMAILS` in the Apps Script)
-- [ ] Deploy the Apps Script and set `formEndpoint`, then send a test inquiry
+- [ ] Deploy the Apps Script and set `formEndpoint`, then run `docs/launch-qa.md` on the live URL
 - [ ] Verify banner capacity and locations, Snack Shack signage rights, and jersey vendor deadlines
 - [ ] Replace stand-in photos following `docs/photography-art-direction.md`, with parent/guardian releases for identifiable minors
 - [ ] Decide whether Community Supporter recognition runs 12 months from activation or by calendar year, and update the terms to match
-- [ ] Add confirmed sponsors to `sponsors`
+- [ ] Add confirmed sponsors to `sponsors`, plus any verified past supporters you'd like to thank
 
 ## Structure
 
@@ -127,5 +153,6 @@ assets/js/main.js                  # availability, form, directory, nav
 assets/img/photos/                 # one file per photo placement
 assets/img/                        # brand logos, favicons
 docs/photography-art-direction.md  # image briefs per placement
+docs/launch-qa.md                  # pre-launch click-through + test inquiry
 integrations/google-apps-script.gs # form -> Google Sheet + email
 ```

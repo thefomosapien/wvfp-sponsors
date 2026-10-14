@@ -504,12 +504,13 @@
     { id: "silver",   title: "Silver Supporters",         levels: ["silver"],                size: "md", logos: true },
     { id: "bronze",   title: "Bronze Supporters",         levels: ["bronze"],                size: "sm", logos: false },
     { id: "field",    title: "Field & Digital Sponsors",  levels: ["field", "digital"],      size: "sm", logos: true },
-    { id: "in-kind",  title: "In-Kind Partners",          levels: ["in-kind"],               size: "sm", logos: true }
+    { id: "in-kind",  title: "In-Kind Partners",          levels: ["in-kind"],               size: "sm", logos: true },
+    { id: "past",     title: "Thank You to Past Supporters", levels: ["past"],               size: "sm", logos: false }
   ];
   var LEVEL_NAMES = {
     "website": "Website Partner", "partner": "Major Partner", "jersey": "Jersey Sponsor",
     "snack-shack": "Snack Shack Presenting Sponsor", "gold": "Gold", "silver": "Silver", "bronze": "Bronze",
-    "field": "Field Sponsor", "digital": "Digital Sponsor", "in-kind": "In-Kind Partner"
+    "field": "Field Sponsor", "digital": "Digital Sponsor", "in-kind": "In-Kind Partner", "past": "Past Supporter"
   };
 
   var dirList = $("#dirList");
@@ -517,9 +518,11 @@
   var dirEmpty = $("#dirEmpty");
   var today = new Date().toISOString().slice(0, 10);
 
+  // Current partners expire after `until`; verified past supporters are historical and always shown
   var active = (DATA.sponsors || []).filter(function (s) {
-    return s && s.name && (!s.until || s.until >= today);
+    return s && s.name && (s.level === "past" || !s.until || s.until >= today);
   });
+  var current = active.filter(function (s) { return s.level !== "past"; });
 
   function safeUrl(u) {
     if (!u) return "";
@@ -581,7 +584,7 @@
         ul.className = "dir-text-list";
         members.forEach(function (s) {
           var li = document.createElement("li");
-          li.textContent = s.name;
+          li.textContent = s.name + (s.years ? " (" + s.years + ")" : "");
           ul.appendChild(li);
         });
         section.appendChild(ul);
@@ -590,8 +593,9 @@
     });
   }
 
+  // Keep the invitation visible until there are current partners
+  dirEmpty.hidden = current.length > 0;
   if (active.length) {
-    dirEmpty.hidden = true;
     var present = DIR_GROUPS.filter(function (g) { return membersOf(g).length; });
     if (present.length > 1) {
       dirFilters.hidden = false;
