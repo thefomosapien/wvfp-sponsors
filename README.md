@@ -7,6 +7,8 @@ Search metadata: title/description and NGO + WebPage structured data (JSON-LD) a
 `<head>`; FAQPage structured data is generated in `main.js` from the visible FAQ.
 A plain-language tax guide lives at `/tax-deductible-sponsorship/` (its own page, linked from the
 tax FAQ and footer; update its "Last updated" date and sitemap `lastmod` when tax rules change).
+Sponsor badge kit: `/sponsor-badge/` (noindex) has copy-and-paste badge code for sponsors' websites;
+badge images are in `assets/img/badges/`. Send the link in each sponsor's welcome email.
 Photos ship as WebP with JPG fallbacks (`<picture>`); regenerate the `.webp` when replacing a photo.
 `robots.txt` and `sitemap.xml` sit at the repo root; update the sitemap's `lastmod` after major
 content changes. If the domain ever changes, update the canonical and `og:` URLs in `index.html`

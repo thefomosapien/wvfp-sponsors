@@ -803,3 +803,19 @@ a.dir-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
   .guide-header-cta { font-size: .7rem; padding: .55rem .8rem; }
   .guide-page .brand-lockup__label { display: none; }
 }
+
+/* Sponsor badge kit (/sponsor-badge/) */
+.badge-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1.4rem 0 1rem; }
+.badge-option { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow-sm); min-width: 0; }
+.badge-option h3 { font-size: 1.15rem; margin: 1rem 0 .6rem; }
+.badge-option__preview { border-radius: 10px; padding: 1.2rem; display: grid; place-items: center; }
+.badge-option__preview img { width: 100%; max-width: 300px; height: auto; }
+.badge-option__preview--light { background: var(--paper); border: 1px solid var(--line); }
+.badge-option__preview--dark { background: #2b211b; }
+.badge-option__label { display: block; font-size: .75rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 .35rem; }
+.badge-code { width: 100%; font: .8rem/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink); background: var(--paper); border: 1px solid var(--line-strong); border-radius: 8px; padding: .7rem; resize: vertical; }
+.badge-option__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; margin: .7rem 0 1.2rem; }
+.badge-option__download { color: var(--red); font-weight: 700; }
+@media (max-width: 760px) { .badge-options { grid-template-columns: 1fr; } }
+.partners-badge-link { font-weight: 700; color: var(--ink-soft); margin: 0; }
+.partners-badge-link a { color: var(--red); }
