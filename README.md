@@ -1,8 +1,11 @@
 # West Valley Fast Pitch — Sponsorships
 
 An evergreen, one-page site that invites local businesses to sponsor West Valley Fast Pitch
-and turns interest into a conversation. Recommended home:
-`wvfastpitch.org/sponsors`.
+and turns interest into a conversation. Live at
+`https://sponsors.wvfastpitch.org` (Vercel; the main wvfastpitch.org site is on Sports Connect).
+`robots.txt` and `sitemap.xml` sit at the repo root; update the sitemap's `lastmod` after major
+content changes. If the domain ever changes, update the canonical and `og:` URLs in `index.html`
+and both of those files.
 
 The page has three goals: **inspire** (why girls softball matters and WVFP's
 history since 1974), **inform** (opportunities, visibility, and impact), and
@@ -184,7 +187,7 @@ deploying.
 Outreach emails can deep-link with the opportunity already selected:
 
 ```
-https://wvfastpitch.org/sponsors/?opportunity=jersey-spring#inquire
+https://sponsors.wvfastpitch.org/?opportunity=jersey-spring#inquire
 ```
 
 Valid keys: `field`, `shared-banner`, `dedicated-banner`, `jersey`, `jersey-spring`,
