@@ -170,8 +170,10 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   font-weight: 900; text-transform: uppercase; letter-spacing: .18em; font-size: .8rem;
   color: var(--gold); margin: 0 0 1.2rem; display: inline-flex; align-items: center; gap: .5rem;
 }
-.hero__title { color: var(--cream); font-size: clamp(2.6rem, 6.4vw, 4.9rem); line-height: .98; margin: 0 0 1.3rem; max-width: 17ch; }
-.hero__title span { color: var(--gold); display: block; }
+/* Two lines exactly: each phrase stays on one line, so the size scales with the viewport */
+.hero__title { color: var(--cream); font-size: clamp(1.6rem, 8.4vw, 4.9rem); line-height: .98; margin: 0 0 1.3rem; }
+.hero__line { display: block; white-space: nowrap; }
+.hero__line--accent { color: var(--gold); }
 .hero__lede { font-family: var(--f-editorial); font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.5; max-width: 46ch; color: rgba(255,247,232,.92); margin: 0 0 clamp(2rem, 5vw, 3.2rem); }
 
 .hero__actions { display: flex; flex-wrap: wrap; gap: .9rem; margin-bottom: 1.3rem; }
