@@ -247,9 +247,19 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 .facts li { border-top: 4px solid var(--red); padding-top: .7rem; }
 .facts li:nth-child(2) { border-top-color: var(--gold); }
 .facts li:nth-child(3) { border-top-color: var(--teal); }
-.facts li:nth-child(3) strong { font-size: clamp(1.2rem, 2.2vw, 1.55rem); padding-top: .25em; }
 .facts strong { display: block; font-family: var(--f-display); font-weight: 900; color: var(--red); font-size: clamp(1.6rem, 3vw, 2.1rem); line-height: 1.1; }
 .facts span { color: var(--ink-soft); font-size: .88rem; font-weight: 700; }
+
+/* Audience reach band (top of Featured Sponsorships) */
+.reach { background: var(--deep-red); color: var(--cream); border-radius: var(--radius); padding: clamp(1.4rem, 3.5vw, 2.2rem) clamp(1.2rem, 3.5vw, 2.4rem); margin: 0 0 clamp(2rem, 5vw, 3rem); box-shadow: var(--shadow-md); }
+.reach__title { font-weight: 900; font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 1.1rem; }
+.reach__title::before { content: "★"; margin-right: .55rem; }
+.reach__stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem 1.6rem; }
+.reach__stats li { border-left: 3px solid var(--gold); padding-left: .9rem; }
+.reach__stats strong { display: block; font-family: var(--f-display); font-weight: 900; color: var(--cream); font-size: clamp(1.9rem, 4vw, 2.8rem); line-height: 1.05; }
+.reach__stats span { display: block; margin-top: .3rem; font-size: .9rem; font-weight: 700; line-height: 1.35; color: rgba(255,247,232,.85); }
+.reach__note { margin: 1.2rem 0 0; font-size: .8rem; font-style: italic; color: rgba(255,247,232,.7); }
+@media (max-width: 760px) { .reach__stats { grid-template-columns: 1fr 1fr; } }
 
 .funds { margin-top: clamp(2.6rem, 6vw, 4rem); padding: 1.4rem 1.6rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.6rem; }
 .funds .eyebrow { margin: 0; }
