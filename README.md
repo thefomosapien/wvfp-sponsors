@@ -100,8 +100,8 @@ List a business once, at its highest recognition level.
 (`#promoBar` in `index.html`). It manages its own dates: the "sponsor before December 31"
 tax line hides after 2026-12-31 and is replaced by a "part of it from opening day" line,
 and the whole bar disappears after 2027-05-31 (`data-until`). For a new season, edit the
-text and dates in that block. The tax line deliberately says contributions *may* count and
-points to a tax advisor; confirm WVFP's federal tax status before promising more.
+text and dates in that block. The tax line deliberately says support *may* qualify and
+carries an asterisk pointing to the tax disclaimer in the footer (`#tax-note`).
 
 **Pricing status.** `pricingStatus: "proposed"` shows a small note under the Featured
 Sponsorships heading saying pricing is pending board approval. Change it to `"approved"` after the
