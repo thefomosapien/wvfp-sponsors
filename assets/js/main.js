@@ -100,6 +100,23 @@
     if (note) note.remove();
   }
 
+  /* ---------- FAQ structured data, built from the visible FAQ so the two never drift ---------- */
+  var faqItems = $$("#faq details").map(function (d) {
+    var q = d.querySelector("summary"), a = d.querySelector("p");
+    if (!q || !a) return null;
+    return {
+      "@type": "Question",
+      name: q.textContent.replace(/\*\s*$/, "").trim(),
+      acceptedAnswer: { "@type": "Answer", text: a.textContent.trim() }
+    };
+  }).filter(Boolean);
+  if (faqItems.length) {
+    var faqLd = document.createElement("script");
+    faqLd.type = "application/ld+json";
+    faqLd.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqItems });
+    document.head.appendChild(faqLd);
+  }
+
   /* ---------- Seasonal promo bar: date-limited pieces hide themselves ---------- */
   var todayISO = new Date().toISOString().slice(0, 10);
   $$("#promoBar [data-until], #promoBar[data-until]").forEach(function (el) {
